@@ -17,12 +17,12 @@ public:
     void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
     void addTempCodeFile(const std::string& content);
-    void addTempMainFile(const std::string& content);
 	void addTestCase(const std::string& argv, const std::string& expectedOutput);
     bool run();
 private:
     std::vector<std::string> requiredFilePaths_;
-	std::vector<TemporaryFile> temporaryFiles_;
+	std::vector<TemporaryFile> allTempCodeFiles_;
+	std::vector<TemporaryFile> allTemporaryFiles_;
 	std::vector<t_test_case> allTestCase_;
     std::string directory_;
     std::string CC_;

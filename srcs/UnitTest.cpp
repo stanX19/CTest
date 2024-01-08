@@ -22,20 +22,12 @@ void UnitTest::addRequiredFile(const std::string& filename) {
 
 void UnitTest::addTemporaryFile(const std::string& content) {
     TemporaryFile tempFile(content);
-    temporaryFiles_.push_back(tempFile);
+    allTemporaryFiles_.push_back({tempFile});
 }
 
 void UnitTest::addTempCodeFile(const std::string& content) {
-	static const std::string headers = "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <math.h>";
-    TemporaryFile tempFile(headers + content);
-    temporaryFiles_.push_back(tempFile);
-}
-
-void UnitTest::addTempMainFile(const std::string& content) {
-	static const std::string main_start = "int main(int argc, char **argv)\n{\n";
-	static const std::string main_end = "\n}";
-    TemporaryFile tempFile(main_start + content + main_end);
-    temporaryFiles_.push_back(tempFile);
+	static const std::string headers = "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <math.h>\n";
+    allTempCodeFiles_.push_back(headers + content);
 }
 
 void UnitTest::addTestCase(const std::string& argv, const std::string& expectedOutput) {
@@ -66,8 +58,14 @@ void UnitTest::compile() {
     std::string compileCommand = CC_ + " " + CFLAGS_;
 
     for (const auto& filePath : requiredFilePaths_) {
+		if (*(----filePath.end()) != '.' && *(--filePath.end()) != 'c')
+			continue;
         compileCommand += " " + filePath;
     }
+	for (const auto& file : allTempCodeFiles_) {
+        compileCommand += " " + file.filename();
+    }
+	compileCommand += " -o a.out 2> /dev/null";
     int compileResult = std::system(compileCommand.c_str());
 
     if (compileResult != 0) {
@@ -102,6 +100,7 @@ void UnitTest::printKOTestCase() {
 		auto &test_case = allTestCase_[i];
 		if (test_case.ok)
 			continue;
+		std::cout << "Case " << i << ":\n";
 		std::cout << test_case;
 	}
 }

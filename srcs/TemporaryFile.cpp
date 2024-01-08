@@ -5,6 +5,11 @@ TemporaryFile::TemporaryFile(const std::string& content, const std::string& type
 	setContent(content);
 }
 
+TemporaryFile::TemporaryFile(const TemporaryFile &other) : type_(other.type_) {
+	generateUniqueFilename();
+	setContent(other.readContent());
+}
+
 TemporaryFile::~TemporaryFile() {
 	if (std::remove(filename_.c_str()) != 0) {
 		std::cerr << "Error deleting temporary file '" << filename_ << "'" << std::endl;
@@ -17,11 +22,11 @@ void TemporaryFile::setContent(const std::string& content) {
 	file.close();
 }
 
-std::string TemporaryFile::filename() {
+std::string TemporaryFile::filename() const {
 	return filename_;
 }
 
-std::string TemporaryFile::readContent() {
+std::string TemporaryFile::readContent() const {
 	std::ifstream file(filename_);
     if (!file.is_open()) {
         std::cerr << "Error opening file '" << filename_ << "' for reading." << std::endl;
