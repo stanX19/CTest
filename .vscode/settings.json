@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"unittest.hpp": "c",
+		"temporaryfile.hpp": "c"
+	}
+}
