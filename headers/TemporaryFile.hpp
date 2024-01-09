@@ -1,6 +1,6 @@
-#ifndef TEMPORARYFILE_H
-#define TEMPORARYFILE_H
-# include <bits/stdc++.h>
+#ifndef TEMPORARYFILE_HPP
+# define TEMPORARYFILE_HPP
+# include "common.hpp"
 
 class TemporaryFile {
 public:

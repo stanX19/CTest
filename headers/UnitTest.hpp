@@ -1,6 +1,6 @@
 #ifndef C_TEST_HPP
 # define C_TEST_HPP
-# include <bits/stdc++.h>
+# include "common.hpp"
 # include "TemporaryFile.hpp"
 
 typedef struct s_test_case {

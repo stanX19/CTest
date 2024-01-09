@@ -2,7 +2,7 @@ SRCDIR		= srcs
 SRCS		= $(addsuffix .cpp, $(addprefix $(SRCDIR)/, TemporaryFile UnitTest))
 
 HEADER_DIR	= headers
-HEADERS		= $(addprefix $(HEADER_DIR)/, UnitTest.hpp TemporaryFile.hpp)
+HEADERS		= $(addprefix $(HEADER_DIR)/, UnitTest.hpp TemporaryFile.hpp common.hpp)
 OBJDIR		= objs
 OBJDIRS		= $(sort $(dir $(OBJS)))
 OBJS		= $(subst $(SRCDIR),$(OBJDIR),$(subst .cpp,.o,$(SRCS)))
@@ -13,13 +13,13 @@ NAME		= unittest.a
 IFLAGS		= -I. -I$(HEADER_DIR)
 
 CC			= g++
-CFLAGS		= -Wall -Wextra -Werror -fsanitize=address -g3
+CFLAGS		= -Wall -Wextra -Werror -fsanitize=address -g3 -std=c++17
 
 UP			= \033[1A
 FLUSH		= \033[2K
 
 run: $(NAME)
-	$(CC) $(CFLAGS) $(IFLAGS) main.cpp unittest.a -o a.out && ./a.out
+	$(CC) $(CFLAGS) $(IFLAGS) main.cpp $(NAME) -o a.out && ./a.out
 
 all: $(NAME)
 
