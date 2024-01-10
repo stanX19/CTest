@@ -1,87 +1,99 @@
 #include "UnitTest.hpp"
 
-std::ostream &operator<<(std::ostream &os, const t_test_case &testCase)
-{
-	os << "    Input    : " << testCase.argv;
-	os << "\n    Output   : " << testCase.actualOutput << "\n------------------------------";
-	if (!testCase.error)
-	{
-		os << "\n    Expected : " << testCase.expectedOutput;
-	}
-	else
-		os << "\n    Error    : " << testCase.stdError;
-	os << '\n' << std::endl;
-	return os;
+bool UnitTestconfig::parseArgv(int argc, char** argv) {
+    using namespace UnitTestconfig;
+    for (int i = 1; i < argc; i++) {
+        std::string arg(argv[i]);
+        if (arg == "-a") {
+            showAll = true;
+        } else if (arg == "-k") {
+            showKO = true;
+        } else if (arg == "-d") {
+            showKODetails = true;
+        } else {
+            std::cerr << "Error: Unrecognized option '" << arg << "'\n";
+            std::cerr << "Usage: " << argv[0] << " [-a] [-k] [-d]\n"
+					  << "Options:\n"
+					  << "  -a : Show all test results\n"
+					  << "  -k : Show only failed test results\n"
+					  << "  -d : Show details of failed test cases\n";
+            return false; // Indicate error
+        }
+    }
+    return true; // Parsing successful
 }
 
-UnitTest::UnitTest(std::string directory, std::string execute) : directory_(directory), CC_CFlags_(execute) {}
+UnitTest::UnitTest(std::string directory, std::string CC, std::string CFLAGS)
+    : directory_(directory), CC_(CC), CFLAGS_(CFLAGS) {}
 
-void UnitTest::addRequiredFile(const std::string &filename)
-{
+// .c type file will be compiled together
+void UnitTest::addRequiredFile(const std::string &filename) {
 	requiredFilePaths_.push_back(directory_ + "/" + filename);
 }
 
-void UnitTest::addTemporaryFile(const std::string &content)
-{
+// won't be compiled together
+void UnitTest::addTemporaryFile(const std::string &content) {
 	TemporaryFile tempFile(content);
 	allTemporaryFiles_.push_back(tempFile);
 }
 
-void UnitTest::addTemporaryMainFile(const std::string &templates, const std::string &contents)
-{
-	static const char *MAIN_START = "int main(int argc, char **argv)\n{(void)argc;(void)argv;";
-	static const char *MAIN_END = "\n}\n";
+// will be compiled together
+void UnitTest::addTemporaryMainFile(const std::string &templates, const std::string &contents) {
+	static const char *MAIN_START = "\nint main(int argc, char **argv)\n{(void)argc;(void)argv;";
+	static const char *MAIN_END = "}";
 	addTemporaryCodeFile(templates + MAIN_START + contents + MAIN_END);
 }
 
-void UnitTest::addTemporaryCodeFile(const std::string &content)
-{
-	static const std::string headers = "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <math.h>\n";
+// will be compiled together
+void UnitTest::addTemporaryCodeFile(const std::string &content) {
+	static const std::string headers = "\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <math.h>\n";
 	allTempCodeFiles_.push_back(headers + content);
 }
 
-void UnitTest::addTestCase(const std::string &argv, const std::string &expectedOutput)
-{
+void UnitTest::addTestCase(const std::string &argv, const std::string &expectedOutput) {
 	t_test_case test_case;
 	test_case.expectedOutput = expectedOutput;
 	test_case.argv = argv;
 	allTestCase_.push_back(test_case);
 }
 
-bool UnitTest::run()
-{
-	try
-	{
+bool UnitTest::OverallOk() {
+	return std::all_of(allTestCase_.begin(), allTestCase_.end(),
+		[](const t_test_case &test_case){ return test_case.ok; }
+	);
+}
+
+bool UnitTest::printStatus() {
+	bool Allok = OverallOk();
+	if (Allok)
+		utils::printOK(directory_);
+	else
+		utils::printKO(directory_);
+	printTestCase();
+	return Allok;
+}
+
+bool UnitTest::run() {
+	try	{
 		compile();
-		bool ok = runAllTestCase();
-		if (ok)
-		{
-			std::cout << color::GREEN << directory_ << ": OK\n"
-					  << color::RESET;
-		}
-		else
-		{
-			std::cout << color::RED << directory_ << ": KO\n"
-					  << color::RESET;
-			printKOTestCase();
-		}
-		return true;
+		runAllTestCase();
+		printStatus();
 	}
 	catch (const std::exception &e)
 	{
-		std::cout << directory_ << ": KO\n"
-				  << e.what() << std::endl;
-		return false;
+		utils::printKO(directory_);
+		std::cout << e.what() << std::endl;
 	}
+	return OverallOk();
 }
 
 void UnitTest::compile()
 {
-	std::string compileCommand = CC_CFlags_;
+	std::string compileCommand = CC_ + " " + CFLAGS_;
 
 	for (const std::string &filePath : requiredFilePaths_)
 	{
-		if (*(----filePath.end()) != '.' && *(--filePath.end()) != 'c')
+		if (utils::getFileExtension(filePath) != "c")
 			continue;
 		compileCommand += " " + filePath;
 	}
@@ -89,7 +101,7 @@ void UnitTest::compile()
 	{
 		compileCommand += " " + file.filename();
 	}
-	compileCommand += " -o a.out 2> /dev/null";
+	compileCommand += " -o " + executableFile_.filename() + " 2> /dev/null";
 	int compileResult = std::system(compileCommand.c_str());
 
 	if (compileResult != 0)
@@ -100,35 +112,80 @@ void UnitTest::compile()
 
 bool UnitTest::runAllTestCase()
 {
-	bool ok = true;
 	for (t_test_case &test_case : allTestCase_)
 	{
-		ok = runTestCase(test_case) && ok;
+		runTestCase(test_case);
 	}
-	return ok;
+	return OverallOk();
 }
 
 bool UnitTest::runTestCase(t_test_case &test_case)
 {
-	TemporaryFile outputFile;
-	TemporaryFile errorFile;
-	std::string runCommand = "./a.out " + test_case.argv + " > " + outputFile.filename() + " 2> " + errorFile.filename();
+	std::string runCommand = "./" + executableFile_.filename() + " " + test_case.argv + " > " + outputFile_.filename() + " 2> " + errorFile_.filename();
 	std::system(runCommand.c_str());
-	test_case.actualOutput = outputFile.readContent();
-	test_case.stdError = errorFile.readContent();
-	test_case.ok = (test_case.actualOutput == test_case.expectedOutput);
+
+	test_case.actualOutput = outputFile_.readContent();
+	test_case.stdError = errorFile_.readContent();
+
 	test_case.error = test_case.stdError != "";
+	test_case.ok = (test_case.actualOutput == test_case.expectedOutput) && !test_case.error;
 	return test_case.ok;
 }
 
-void UnitTest::printKOTestCase()
+void UnitTest::printTestCase() {
+	if (UnitTestconfig::showAll)
+		printAllTestCase();
+	if (UnitTestconfig::showKO) {
+		if (UnitTestconfig::showKODetails)
+			printKOTestCaseDetailed();
+		else
+			printKOTestCaseSimplified();
+	}
+	
+}
+
+void UnitTest::printAllTestCase() {
+	for (size_t i = 0; i < allTestCase_.size(); i++)
+	{
+		if (allTestCase_[i].ok) {
+			std::cout << color::GREEN << i + 1 << ".OK ";
+		} 
+		else
+			std::cout << color::RED << i + 1 << ".KO ";
+	}
+	std::cout << color::RESET <<std::endl;
+}
+
+void UnitTest::printKOTestCaseSimplified()
 {
+	if (OverallOk())
+		return ;
+	std::cout << "Failed: [";
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		auto &test_case = allTestCase_[i];
 		if (test_case.ok)
 			continue;
-		std::cout << "Case " << i << ":\n";
-		std::cout << test_case;
+		std::cout << "(Case " << i + 1 << ": Input: '" << test_case.argv << "'; Output: '"
+				  << test_case.actualOutput << "'), ";
+	}
+	std::cout << "\b\b]\n";
+}
+
+void UnitTest::printKOTestCaseDetailed() {
+	for (size_t i = 0; i < allTestCase_.size(); i++)
+	{
+		auto &testCase = allTestCase_[i];
+		if (testCase.ok)
+			continue;
+		std::cout << "==Case " << i + 1 << std::setw(100 - 6) << std::setfill('=') << "\n"
+				  << "Input    : " << testCase.argv
+				  << "\nOutput   : " << testCase.actualOutput << "\n"
+				  << std::setw(100) << std::setfill('=');
+		if (!testCase.error) {
+			std::cout << "\nExpected : " << testCase.expectedOutput;
+		}
+		else
+			std::cout << "\nError    : " << testCase.stdError;
 	}
 }

@@ -1,8 +1,8 @@
 SRCDIR		= srcs
-SRCS		= $(addsuffix .cpp, $(addprefix $(SRCDIR)/, TemporaryFile UnitTest))
+SRCS		= $(wildcard $(SRCDIR)/*.cpp)
 
 HEADER_DIR	= headers
-HEADERS		= $(addprefix $(HEADER_DIR)/, UnitTest.hpp TemporaryFile.hpp common.hpp)
+HEADERS		= $(wildcard $(HEADER_DIR)/*.hpp)
 OBJDIR		= objs
 OBJDIRS		= $(sort $(dir $(OBJS)))
 OBJS		= $(subst $(SRCDIR),$(OBJDIR),$(subst .cpp,.o,$(SRCS)))
