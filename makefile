@@ -18,9 +18,6 @@ CFLAGS		= -Wall -Wextra -Werror -fsanitize=address -g3 -std=c++17
 UP			= \033[1A
 FLUSH		= \033[2K
 
-run: $(NAME)
-	$(CC) $(CFLAGS) $(IFLAGS) main.cpp $(NAME) -o a.out && ./a.out
-
 all: $(NAME)
 
 $(NAME): $(OBJDIRS) $(OBJS) $(HEADERS)
