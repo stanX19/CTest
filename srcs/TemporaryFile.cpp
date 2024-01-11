@@ -44,5 +44,5 @@ void TemporaryFile::generateUniqueFilename() {
 		oss << "temp" << std::setfill('0') << std::setw(3) << counter << type_;
 		filename_ = oss.str();
 		counter++;
-	} while (std::ifstream(filename_).good());
+	} while (utils::pathExists(filename_));
 }

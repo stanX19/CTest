@@ -9,6 +9,10 @@ std::string utils::getFileExtension(const std::string& filePath) {
     return "";
 }
 
+bool utils::pathExists(const std::string& filePath) {
+    return std::ifstream(filePath).good();
+}
+
 void utils::printOK(const std::string &dir) {
 	std::cout << color::greenText(dir + ": OK") << std::endl;
 }

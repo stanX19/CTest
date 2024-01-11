@@ -1,10 +1,11 @@
 #ifndef TEMPORARYFILE_HPP
 # define TEMPORARYFILE_HPP
 # include "common.hpp"
+# include "utils.hpp"
 
 class TemporaryFile {
 public:
-    TemporaryFile(const std::string& content="", const std::string& type=".c");
+    TemporaryFile(const std::string& content="", const std::string& type="");
 	TemporaryFile(const TemporaryFile &other);
     ~TemporaryFile();
     void setContent(const std::string& content);

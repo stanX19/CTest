@@ -16,15 +16,15 @@ void UnitTest::addTemporaryFile(const std::string &content) {
 
 // will be compiled together
 void UnitTest::addTemporaryMainFile(const std::string &templates, const std::string &contents) {
-	static const char *MAIN_START = "\nint main(int argc, char **argv)\n{(void)argc;(void)argv;";
-	static const char *MAIN_END = "}";
+	static const char *MAIN_START = "\nint main(int argc, char **argv){";
+	static const char *MAIN_END = ";(void)argc;(void)argv;}";
 	addTemporaryCodeFile(templates + MAIN_START + contents + MAIN_END);
 }
 
 // will be compiled together
 void UnitTest::addTemporaryCodeFile(const std::string &content) {
 	static const std::string headers = "\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <math.h>\n";
-	allTempCodeFiles_.push_back(headers + content);
+	allTempCodeFiles_.push_back({headers + content, ".c"});
 }
 
 void UnitTest::addTestCase(const std::string &argv, const std::string &expectedOutput) {
@@ -56,12 +56,21 @@ bool UnitTest::run() {
 		runAllTestCase();
 		printStatus();
 	}
-	catch (const std::exception &e)
+	catch (const std::exception &exc)
 	{
 		utils::printKO(directory_);
-		std::cout << e.what() << std::endl;
+		handleException(exc);
 	}
 	return OverallOk();
+}
+
+void UnitTest::handleException(const std::exception &e) {
+	if (UnitTestconfig::showKO || UnitTestconfig::showKODetails)
+		std::cout << e.what() << std::endl;
+}
+
+void UnitTest::validateFiles() {
+	
 }
 
 void UnitTest::compile()
@@ -70,6 +79,8 @@ void UnitTest::compile()
 
 	for (const std::string &filePath : requiredFilePaths_)
 	{
+		if (!utils::pathExists(filePath))
+			throw std::runtime_error("required file not found: " + filePath);
 		if (utils::getFileExtension(filePath) != "c")
 			continue;
 		compileCommand += " " + filePath;
@@ -78,12 +89,12 @@ void UnitTest::compile()
 	{
 		compileCommand += " " + file.filename();
 	}
-	compileCommand += " -o " + executableFile_.filename() + " 2> /dev/null";
+	compileCommand += " -o " + executableFile_.filename() + " 2> " + errorFile_.filename();
 	int compileResult = std::system(compileCommand.c_str());
 
 	if (compileResult != 0)
 	{
-		throw std::runtime_error("Compilation failed");
+		throw std::runtime_error("Compilation failed: " + errorFile_.readContent());
 	}
 }
 
@@ -98,7 +109,8 @@ bool UnitTest::runAllTestCase()
 
 bool UnitTest::runTestCase(t_test_case &test_case)
 {
-	std::string runCommand = "./" + executableFile_.filename() + " " + test_case.argv + " > " + outputFile_.filename() + " 2> " + errorFile_.filename();
+	std::string redirect = " > " + outputFile_.filename() + " 2> " + errorFile_.filename();
+	std::string runCommand = "./" + executableFile_.filename() + " " + test_case.argv + redirect;
 	std::system(runCommand.c_str());
 
 	test_case.actualOutput = outputFile_.readContent();
@@ -155,7 +167,7 @@ void UnitTest::printKOTestCaseDetailed() {
 		auto &testCase = allTestCase_[i];
 		if (testCase.ok)
 			continue;
-		std::cout << "==Case " << i + 1 << std::setw(100 - 6) << std::setfill('=') << "\n"
+		std::cout << "==Case " << i + 1 << std::setw(100 - 20) << std::setfill('=') << "\n"
 				  << "Input    : " << testCase.argv
 				  << "\nOutput   : " << testCase.actualOutput << "\n"
 				  << std::setw(100) << std::setfill('=');
@@ -164,5 +176,6 @@ void UnitTest::printKOTestCaseDetailed() {
 		}
 		else
 			std::cout << "\nError    : " << testCase.stdError;
+		std::cout << "\n\n";
 	}
 }

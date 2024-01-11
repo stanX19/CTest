@@ -24,7 +24,7 @@ namespace UnitTestconfig {
 
 class UnitTest {
 public:
-	UnitTest(std::string directory, std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror");
+	UnitTest(std::string directory, std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
     void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
 	void addTemporaryMainFile(const std::string& function_templates, const std::string& main_content);
@@ -44,9 +44,11 @@ private:
     std::string CC_;
     std::string CFLAGS_;
 
+	void validateFiles();
 	void compile();
 	bool runTestCase(t_test_case &test_case);
 	bool runAllTestCase();
+	void handleException(const std::exception &exc);
 	void printAllTestCase();
 	void printTestCase();
 	void printKOTestCaseDetailed();
