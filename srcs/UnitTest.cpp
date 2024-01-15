@@ -34,43 +34,51 @@ void UnitTest::addTestCase(const std::string &argv, const std::string &expectedO
 	allTestCase_.push_back(test_case);
 }
 
-bool UnitTest::OverallOk() {
+bool UnitTest::OverallOk() const {
 	return std::all_of(allTestCase_.begin(), allTestCase_.end(),
 		[](const t_test_case &test_case){ return test_case.ok; }
 	);
 }
 
-bool UnitTest::printStatus() {
-	bool Allok = OverallOk();
-	if (Allok)
+void UnitTest::printStatus() const {
+	if (OverallOk())
 		utils::printOK(directory_);
 	else
 		utils::printKO(directory_);
-	printTestCase();
-	return Allok;
 }
 
 bool UnitTest::run() {
 	try	{
+		validateRequiredFiles();
 		compile();
 		runAllTestCase();
 		printStatus();
+		printTestCase();
 	}
-	catch (const std::exception &exc)
+	catch (const UnitTestException &exc)
 	{
-		utils::printKO(directory_);
 		handleException(exc);
 	}
 	return OverallOk();
 }
 
-void UnitTest::handleException(const std::exception &e) {
+void UnitTest::handleException(const UnitTestException &e) {
+	std::cout << color::redText(directory_ + ": " + e.type()) << std::endl;
 	if (UnitTestconfig::showKO || UnitTestconfig::showKODetails)
 		std::cout << e.what() << std::endl;
 }
 
-void UnitTest::validateFiles() {
-	
+void UnitTest::validateRequiredFiles() {
+	std::string message;
+
+	if (!utils::dirPathExists(directory_))
+		throw NothingTurnedIn();
+	for (auto &path: requiredFilePaths_) {
+		if (!utils::filePathExists(path))
+			message += path + " ";
+	}
+	if (!message.empty())
+		throw RequiredFileNotFound(message);
 }
 
 void UnitTest::compile()
@@ -79,7 +87,7 @@ void UnitTest::compile()
 
 	for (const std::string &filePath : requiredFilePaths_)
 	{
-		if (!utils::pathExists(filePath))
+		if (!utils::filePathExists(filePath))
 			throw std::runtime_error("required file not found: " + filePath);
 		if (utils::getFileExtension(filePath) != "c")
 			continue;
@@ -94,7 +102,7 @@ void UnitTest::compile()
 
 	if (compileResult != 0)
 	{
-		throw std::runtime_error("Compilation failed: " + errorFile_.readContent());
+		throw CompilationError(errorFile_.readContent());
 	}
 }
 
@@ -104,7 +112,9 @@ bool UnitTest::runAllTestCase()
 	{
 		runTestCase(test_case);
 	}
-	return OverallOk();
+	if (!OverallOk())
+		throw TestCaseKO(getKOMessage());
+	return 1;
 }
 
 bool UnitTest::runTestCase(t_test_case &test_case)
@@ -124,58 +134,65 @@ bool UnitTest::runTestCase(t_test_case &test_case)
 void UnitTest::printTestCase() {
 	if (UnitTestconfig::showAll)
 		printAllTestCase();
-	if (UnitTestconfig::showKO) {
-		if (UnitTestconfig::showKODetails)
-			printKOTestCaseDetailed();
-		else
-			printKOTestCaseSimplified();
-	}
-	
 }
 
 void UnitTest::printAllTestCase() {
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
-		if (allTestCase_[i].ok) {
-			std::cout << color::GREEN << i + 1 << ".OK ";
-		} 
+		if (allTestCase_[i].ok)
+			std::cout << color::CYAN << i + 1 << ".OK ";
 		else
 			std::cout << color::RED << i + 1 << ".KO ";
 	}
 	std::cout << color::RESET <<std::endl;
 }
 
-void UnitTest::printKOTestCaseSimplified()
+std::string UnitTest::getKOMessage() const {
+	if (!UnitTestconfig::showKO)
+		return "";
+	if (UnitTestconfig::showKODetails)
+		return getKOTestCaseDetailed();
+	else
+		return getKOTestCaseSimplified();
+}
+
+std::string UnitTest::getKOTestCaseSimplified() const
 {
+	std::stringstream ret;
+
 	if (OverallOk())
-		return ;
-	std::cout << "Failed: [";
+		return "";
+	ret << "Failed: [";
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		auto &test_case = allTestCase_[i];
 		if (test_case.ok)
 			continue;
-		std::cout << "(Case " << i + 1 << ": Input: '" << test_case.argv << "'; Output: '"
+		ret << "(Case " << i + 1 << ": Input: '" << test_case.argv << "'; Output: '"
 				  << test_case.actualOutput << "'), ";
 	}
-	std::cout << "\b\b]\n";
+	ret << "\b\b]\n";
+	return ret.str();
 }
 
-void UnitTest::printKOTestCaseDetailed() {
+std::string UnitTest::getKOTestCaseDetailed() const {
+	std::stringstream ret;
+
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		auto &testCase = allTestCase_[i];
 		if (testCase.ok)
 			continue;
-		std::cout << "==Case " << i + 1 << std::setw(100 - 20) << std::setfill('=') << "\n"
+		ret << "==Case " << i + 1 << std::setw(100 - 20) << std::setfill('=') << "\n"
 				  << "Input    : " << testCase.argv
 				  << "\nOutput   : " << testCase.actualOutput << "\n"
 				  << std::setw(100) << std::setfill('=');
 		if (!testCase.error) {
-			std::cout << "\nExpected : " << testCase.expectedOutput;
+			ret << "\nExpected : " << testCase.expectedOutput;
 		}
 		else
-			std::cout << "\nError    : " << testCase.stdError;
-		std::cout << "\n\n";
+			ret << "\nError    : " << testCase.stdError;
+		ret << "\n\n";
 	}
+	return ret.str();
 }

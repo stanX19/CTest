@@ -2,6 +2,7 @@
 # define C_TEST_HPP
 # include "common.hpp"
 # include "TemporaryFile.hpp"
+# include "UnitTestException.hpp"
 # include "utils.hpp"
 # include "color.hpp"
 
@@ -30,7 +31,7 @@ public:
 	void addTemporaryMainFile(const std::string& function_templates, const std::string& main_content);
     void addTemporaryCodeFile(const std::string& content);
 	void addTestCase(const std::string& argv, const std::string& expectedOutput);
-	bool printStatus();
+	void printStatus() const;
     bool run();
 private:
     std::vector<std::string> requiredFilePaths_;
@@ -44,16 +45,17 @@ private:
     std::string CC_;
     std::string CFLAGS_;
 
-	void validateFiles();
+	void validateRequiredFiles();
 	void compile();
 	bool runTestCase(t_test_case &test_case);
 	bool runAllTestCase();
-	void handleException(const std::exception &exc);
+	void handleException(const UnitTestException &exc);
 	void printAllTestCase();
 	void printTestCase();
-	void printKOTestCaseDetailed();
-	void printKOTestCaseSimplified();
-	bool OverallOk();
+	std::string getKOMessage() const;
+	std::string getKOTestCaseDetailed() const;
+	std::string getKOTestCaseSimplified() const;
+	bool OverallOk() const;
 };
 
 #endif

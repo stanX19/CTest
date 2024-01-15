@@ -9,13 +9,21 @@ std::string utils::getFileExtension(const std::string& filePath) {
     return "";
 }
 
-bool utils::pathExists(const std::string& filePath) {
-    return std::ifstream(filePath).good();
+static bool pathExists(const std::string& path) {
+	return std::filesystem::exists(path);
 }
 
-void utils::printOK(const std::string &dir) {
-	std::cout << color::greenText(dir + ": OK") << std::endl;
+bool utils::filePathExists(const std::string& filePath) {
+    return pathExists(filePath);
 }
-void utils::printKO(const std::string &dir) {
-	std::cout << color::redText(dir + ": KO") << std::endl;
+
+bool utils::dirPathExists(const std::string& dirPath) {
+    return pathExists(dirPath);
+}
+
+void utils::printOK(const std::string &dir, const std::string &end) {
+	std::cout << color::greenText(dir + ": OK") << end;
+}
+void utils::printKO(const std::string &dir, const std::string &end) {
+	std::cout << color::redText(dir + ": KO") << end;
 }
