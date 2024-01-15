@@ -8,7 +8,7 @@ static bool processOption(char c) {
 	case 'a':
 		showAll = true;
 		return 0;
-	case 'k':
+	case 'f':
 		showKO = true;
 		return 0;
 	case 'd':
@@ -38,10 +38,10 @@ bool UnitTestconfig::parseArgv(int argc, char** argv) {
     if (processArgv(argc, argv, error)) {
 		if (error != "") {}
 			std::cerr << "Error: Unrecognized option '" << error << "'\n";
-		std::cerr << "Usage: " << argv[0] << " [-a] [-k] [-d]\n"
+		std::cerr << "Usage: " << argv[0] << " [-a] [-f] [-d]\n"
 				  << "Options:\n"
 				  << "  -a : Show all test results\n"
-				  << "  -k : Show only failed test results\n"
+				  << "  -f : Show only failed test results\n"
 				  << "  -d : Show details of failed test cases\n";
 		return false; // Indicate error
     }
