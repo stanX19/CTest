@@ -126,8 +126,8 @@ bool UnitTest::runTestCase(t_test_case &test_case)
 	test_case.actualOutput = outputFile_.readContent();
 	test_case.stdError = errorFile_.readContent();
 
-	test_case.error = test_case.stdError != "";
-	test_case.ok = (test_case.actualOutput == test_case.expectedOutput) && !test_case.error;
+	test_case.error = !test_case.stdError.empty();
+	test_case.ok = (test_case.actualOutput == test_case.expectedOutput) && (!test_case.error);
 	return test_case.ok;
 }
 
