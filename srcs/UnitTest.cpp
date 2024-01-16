@@ -34,17 +34,12 @@ void UnitTest::addTestCase(const std::string &argv, const std::string &expectedO
 	allTestCase_.push_back(test_case);
 }
 
-bool UnitTest::OverallOk() const {
-	return std::all_of(allTestCase_.begin(), allTestCase_.end(),
-		[](const t_test_case &test_case){ return test_case.ok; }
-	);
-}
-
 void UnitTest::printStatus() const {
-	if (OverallOk())
+	if (AllTestCaseOk())
 		utils::printOK(directory_);
-	else
+	else {
 		utils::printKO(directory_);
+	}
 }
 
 bool UnitTest::run() {
@@ -53,42 +48,42 @@ bool UnitTest::run() {
 		compile();
 		runAllTestCase();
 		printStatus();
-		printTestCase();
+		printTestCaseIf();
+		printKOMessage();
 	}
 	catch (const UnitTestException &exc)
 	{
 		handleException(exc);
 	}
-	return OverallOk();
+	return AllTestCaseOk();
 }
 
 void UnitTest::handleException(const UnitTestException &e) {
 	std::cout << color::redText(directory_ + ": " + e.type()) << std::endl;
-	if (UnitTestconfig::showKO || UnitTestconfig::showKODetails)
-		std::cout << e.what() << std::endl;
+	if ((UnitTestconfig::showKO || UnitTestconfig::showKODetails) && *e.what())
+		std::cout << ": " << e.what() << std::endl;
 }
 
 void UnitTest::validateRequiredFiles() {
-	std::string message;
-
-	if (!utils::dirPathExists(directory_))
+	if (!utils::pathExists(directory_))
 		throw NothingTurnedIn();
+
+	std::string message;
 	for (auto &path: requiredFilePaths_) {
-		if (!utils::filePathExists(path))
+		if (!utils::pathExists(path))
 			message += path + " ";
 	}
 	if (!message.empty())
-		throw RequiredFileNotFound(message);
+		throw FileNotFoundError(message);
 }
 
 void UnitTest::compile()
 {
 	std::string compileCommand = CC_ + " " + CFLAGS_;
-
 	for (const std::string &filePath : requiredFilePaths_)
 	{
-		if (!utils::filePathExists(filePath))
-			throw std::runtime_error("required file not found: " + filePath);
+		if (!utils::pathExists(filePath))
+			throw FileNotFoundError(filePath);
 		if (utils::getFileExtension(filePath) != "c")
 			continue;
 		compileCommand += " " + filePath;
@@ -112,9 +107,9 @@ bool UnitTest::runAllTestCase()
 	{
 		runTestCase(test_case);
 	}
-	if (!OverallOk())
-		throw TestCaseKO(getKOMessage());
-	return 1;
+	// if (!AllTestCaseOk())
+	// 	throw TestCaseKO(getKOMessage());
+	return AllTestCaseOk();
 }
 
 bool UnitTest::runTestCase(t_test_case &test_case)
@@ -131,20 +126,31 @@ bool UnitTest::runTestCase(t_test_case &test_case)
 	return test_case.ok;
 }
 
-void UnitTest::printTestCase() {
+
+bool UnitTest::AllTestCaseOk() const {
+	return std::all_of(allTestCase_.begin(), allTestCase_.end(),
+		[](const t_test_case &test_case){ return test_case.ok; }
+	);
+}
+
+void UnitTest::printTestCaseIf() const {
 	if (UnitTestconfig::showAll)
 		printAllTestCase();
 }
 
-void UnitTest::printAllTestCase() {
+void UnitTest::printAllTestCase() const {
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		if (allTestCase_[i].ok)
 			std::cout << color::CYAN << i + 1 << ".OK ";
 		else
-			std::cout << color::RED << i + 1 << ".KO ";
+			std::cout << color::YELLOW << i + 1 << ".KO ";
 	}
 	std::cout << color::RESET <<std::endl;
+}
+
+void UnitTest::printKOMessage() const {
+	std::cout << getKOMessage();
 }
 
 std::string UnitTest::getKOMessage() const {
@@ -153,14 +159,14 @@ std::string UnitTest::getKOMessage() const {
 	if (UnitTestconfig::showKODetails)
 		return getKOTestCaseDetailed();
 	else
-		return getKOTestCaseSimplified();
+		return getKOTestCaseOneLine();
 }
 
-std::string UnitTest::getKOTestCaseSimplified() const
+std::string UnitTest::getKOTestCaseOneLine() const
 {
 	std::stringstream ret;
 
-	if (OverallOk())
+	if (AllTestCaseOk())
 		return "";
 	ret << "Failed: [";
 	for (size_t i = 0; i < allTestCase_.size(); i++)
@@ -170,6 +176,8 @@ std::string UnitTest::getKOTestCaseSimplified() const
 			continue;
 		ret << "(Case " << i + 1 << ": Input: '" << test_case.argv << "'; Output: '"
 				  << test_case.actualOutput << "'), ";
+		if (!UnitTestconfig::showAll)
+			break ;
 	}
 	ret << "\b\b]\n";
 	return ret.str();
@@ -193,6 +201,9 @@ std::string UnitTest::getKOTestCaseDetailed() const {
 		else
 			ret << "\nError    : " << testCase.stdError;
 		ret << "\n\n";
+
+		if (!UnitTestconfig::showAll)
+			break ;
 	}
 	return ret.str();
 }

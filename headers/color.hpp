@@ -14,5 +14,7 @@ namespace color {
 
 	inline std::string redText(const std::string &str) { return RED + str + RESET; }
 	inline std::string greenText(const std::string &str) { return GREEN + str + RESET; }
+	inline std::string cyanText(const std::string &str) { return CYAN + str + RESET; }
+	inline std::string yellowText(const std::string &str) { return YELLOW + str + RESET; }
 }
 #endif

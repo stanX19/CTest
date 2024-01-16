@@ -6,6 +6,8 @@
 # include "utils.hpp"
 # include "color.hpp"
 
+
+
 typedef struct s_test_case {
 	std::string argv;
 	std::string expectedOutput;
@@ -19,7 +21,7 @@ namespace UnitTestconfig {
 	inline bool showKO = 0;
 	inline bool showKODetails = 0;
 	inline bool showAll = 0;
-
+	inline std::string targetDir = ".";
 	bool parseArgv(int argc, char**argv);
 }
 
@@ -33,6 +35,7 @@ public:
 	void addTestCase(const std::string& argv, const std::string& expectedOutput);
 	void printStatus() const;
     bool run();
+
 private:
     std::vector<std::string> requiredFilePaths_;
 	std::vector<TemporaryFile> allTempCodeFiles_;
@@ -50,12 +53,14 @@ private:
 	bool runTestCase(t_test_case &test_case);
 	bool runAllTestCase();
 	void handleException(const UnitTestException &exc);
-	void printAllTestCase();
-	void printTestCase();
+	bool AllTestCaseOk() const;
+	void printTestCaseIf() const;
+	void printAllTestCase() const;
+	void printKOMessage() const;
 	std::string getKOMessage() const;
 	std::string getKOTestCaseDetailed() const;
-	std::string getKOTestCaseSimplified() const;
-	bool OverallOk() const;
+	std::string getKOTestCaseOneLine() const;
+	
 };
 
 #endif

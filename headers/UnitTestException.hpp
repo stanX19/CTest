@@ -23,9 +23,9 @@ public:
     NothingTurnedIn();
 };
 
-class RequiredFileNotFound : public UnitTestException {
+class FileNotFoundError : public UnitTestException {
 public:
-    RequiredFileNotFound(const std::string& fileNames="");
+    FileNotFoundError(const std::string& fileNames="");
 };
 
 class CompilationError : public UnitTestException {
@@ -33,4 +33,13 @@ public:
     CompilationError(const std::string& errorMessage="");
 };
 
+class InvalidDirectory : public UnitTestException {
+public:
+    InvalidDirectory(const std::string& message);
+};
+
+class InvalidFlagError : public UnitTestException {
+public:
+    InvalidFlagError(const std::string& message);
+};
 #endif // UNIT_TEST_EXCEPTION_HPP

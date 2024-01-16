@@ -15,10 +15,16 @@ TestCaseKO::TestCaseKO(const std::string& message)
     : UnitTestException("KO!", message) {}
 
 NothingTurnedIn::NothingTurnedIn()
-    : UnitTestException("Nothing Turned In", "") {}
+    : UnitTestException("Nothing turned in", "") {}
 
-RequiredFileNotFound::RequiredFileNotFound(const std::string& message)
-    : UnitTestException("Required File Not Found", message) {}
+FileNotFoundError::FileNotFoundError(const std::string& message)
+    : UnitTestException("Required file not Found", message) {}
 
 CompilationError::CompilationError(const std::string& message)
-    : UnitTestException("Cannot Compile", message) {}
+	: UnitTestException("Compilation error", message) {}
+
+InvalidDirectory::InvalidDirectory(const std::string& message)
+	: UnitTestException("No such file or directory", message) {}
+
+InvalidFlagError::InvalidFlagError(const std::string& message)
+	: UnitTestException("Invalid flag", message) {}

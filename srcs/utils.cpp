@@ -9,16 +9,8 @@ std::string utils::getFileExtension(const std::string& filePath) {
     return "";
 }
 
-static bool pathExists(const std::string& path) {
+bool utils::pathExists(const std::string& path) {
 	return std::filesystem::exists(path);
-}
-
-bool utils::filePathExists(const std::string& filePath) {
-    return pathExists(filePath);
-}
-
-bool utils::dirPathExists(const std::string& dirPath) {
-    return pathExists(dirPath);
 }
 
 void utils::printOK(const std::string &dir, const std::string &end) {
