@@ -8,11 +8,14 @@ static void processFlag(char c) {
 	case 'a':
 		showAll = true;
 		return ;
+	case 'l':
+		showListCase = true;
+		return ;
 	case 'f':
 		showKO = true;
 		return ;
 	case 'd':
-		showKODetails = true;
+		showDetails = true;
 		return ;
 	}
 	throw InvalidFlagError(std::string("-") + c);
@@ -52,7 +55,8 @@ static void printUsage(char *name) {
 			  << "Runs test case on c language files\n"
 			  << "\n"
 			  << "Options:\n"
-			  << "  -a : Show all test results\n"
+			  << "  -l : Show test case status list\n"
+			  << "  -a : Show all\n"
 			  << "  -f : Show only failed test results\n"
 			  << "  -d : Show details of failed test cases\n"
 			  << "\n"
@@ -61,7 +65,8 @@ static void printUsage(char *name) {
 			  << "\n"
 			  << "Example:\n"
 			  << "  " << name << " ~/Desktop/C0X -a\n"
-			  << "  " << name << " -fd\n"
+			  << "  " << name << " -afd\n"
+			  << "  " << name << " -l\n"
 			  << "\n";
 }
 

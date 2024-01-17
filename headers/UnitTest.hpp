@@ -19,15 +19,25 @@ typedef struct s_test_case {
 
 namespace UnitTestconfig {
 	inline bool showKO = 0;
-	inline bool showKODetails = 0;
+	inline bool showDetails = 0;
 	inline bool showAll = 0;
+	inline bool showListCase = 0;
 	inline std::string targetDir = ".";
+	inline static const std::string headers =
+		"\n#include <stdio.h>\n\
+		#include <stdlib.h>\n\
+		#include <unistd.h>\n\
+		#include <string.h>\n\
+		#include <math.h>\n\
+		#include <signal.h>\n";
+	inline static const std::string CC = "gcc";
+	inline static const std::string CFLAGS = "-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments";
 	bool parseArgv(int argc, char**argv);
 }
 
 class UnitTest {
 public:
-	UnitTest(std::string directory, std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1");
+	UnitTest(std::string directory, int timeout=30);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
     void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
 	void addTemporaryMainFile(const std::string& function_templates, const std::string& main_content);
@@ -47,6 +57,7 @@ private:
 	TemporaryFile errorFile_;
     std::string CC_;
     std::string CFLAGS_;
+	size_t timeout_;
 
 	void validateRequiredFiles();
 	void compile();
@@ -54,12 +65,11 @@ private:
 	bool runAllTestCase();
 	void handleException(const UnitTestException &exc);
 	bool AllTestCaseOk() const;
-	void printTestCaseIf() const;
 	void printAllTestCase() const;
-	void printKOMessage() const;
-	std::string getKOMessage() const;
-	std::string getKOTestCaseDetailed() const;
-	std::string getKOTestCaseOneLine() const;
+	void printTestCaseInfo() const;
+	std::string getTestCaseInfo() const;
+	std::string getTestCaseDetailed() const;
+	std::string getTestCaseOneLine() const;
 	
 };
 

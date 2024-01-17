@@ -1,7 +1,7 @@
 #include "UnitTest.hpp"
 
-UnitTest::UnitTest(std::string directory, std::string CC, std::string CFLAGS)
-    : directory_(directory), CC_(CC), CFLAGS_(CFLAGS) {}
+UnitTest::UnitTest(std::string directory, int timeout)
+    : directory_(directory), CC_(UnitTestconfig::CC), CFLAGS_(UnitTestconfig::CFLAGS), timeout_(timeout) {}
 
 // .c type file will be compiled together
 void UnitTest::addRequiredFile(const std::string &filename) {
@@ -16,15 +16,28 @@ void UnitTest::addTemporaryFile(const std::string &content) {
 
 // will be compiled together
 void UnitTest::addTemporaryMainFile(const std::string &templates, const std::string &contents) {
-	static const char *MAIN_START = "\nint main(int argc, char **argv){";
-	static const char *MAIN_END = ";(void)argc;(void)argv;}";
-	addTemporaryCodeFile(templates + MAIN_START + contents + MAIN_END);
+    std::string code = 
+		"\n#define TIMEOUT " + std::to_string(timeout_) + "\n"
+		"\n"
+        "void timeout_handler(int signum) {\n"
+        "    fprintf(stderr, \"Timeout (t > TIMEOUT)\\n\");\n"
+        "    exit(1);\n"
+        "    (void)signum;\n"
+        "}\n"
+        "\n\nint main(int argc, char **argv) {\n"
+        "    signal(SIGALRM, timeout_handler);\n"
+        "    alarm(TIMEOUT);\n"
+        "    " + contents + ";\n"
+        "    alarm(0)\n;"
+        "    (void)argc; (void)argv;\n"
+        "}";
+    
+    addTemporaryCodeFile(templates + code);
 }
 
 // will be compiled together
 void UnitTest::addTemporaryCodeFile(const std::string &content) {
-	static const std::string headers = "\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <math.h>\n";
-	allTempCodeFiles_.push_back({headers + content, ".c"});
+	allTempCodeFiles_.push_back({UnitTestconfig::headers + content, ".c"});
 }
 
 void UnitTest::addTestCase(const std::string &argv, const std::string &expectedOutput) {
@@ -48,8 +61,7 @@ bool UnitTest::run() {
 		compile();
 		runAllTestCase();
 		printStatus();
-		printTestCaseIf();
-		printKOMessage();
+		printTestCaseInfo();
 	}
 	catch (const UnitTestException &exc)
 	{
@@ -60,7 +72,7 @@ bool UnitTest::run() {
 
 void UnitTest::handleException(const UnitTestException &e) {
 	std::cout << color::redText(directory_ + ": " + e.type()) << std::endl;
-	if ((UnitTestconfig::showKO || UnitTestconfig::showKODetails) && *e.what())
+	if ((UnitTestconfig::showKO || UnitTestconfig::showDetails) && *e.what())
 		std::cout << ": " << e.what() << std::endl;
 }
 
@@ -115,7 +127,7 @@ bool UnitTest::runAllTestCase()
 bool UnitTest::runTestCase(t_test_case &test_case)
 {
 	std::string redirect = " > " + outputFile_.filename() + " 2> " + errorFile_.filename();
-	std::string runCommand = "./" + executableFile_.filename() + " " + test_case.argv + redirect;
+	std::string runCommand = "{ ./" + executableFile_.filename() + " " + test_case.argv + " ;}" + redirect;
 	std::system(runCommand.c_str());
 
 	test_case.actualOutput = outputFile_.readContent();
@@ -133,10 +145,6 @@ bool UnitTest::AllTestCaseOk() const {
 	);
 }
 
-void UnitTest::printTestCaseIf() const {
-	if (UnitTestconfig::showAll)
-		printAllTestCase();
-}
 
 void UnitTest::printAllTestCase() const {
 	for (size_t i = 0; i < allTestCase_.size(); i++)
@@ -149,30 +157,36 @@ void UnitTest::printAllTestCase() const {
 	std::cout << color::RESET <<std::endl;
 }
 
-void UnitTest::printKOMessage() const {
-	std::cout << getKOMessage();
+void UnitTest::printTestCaseInfo() const {
+	if (UnitTestconfig::showListCase)
+		printAllTestCase();
+	std::cout << getTestCaseInfo();
 }
 
-std::string UnitTest::getKOMessage() const {
-	if (!UnitTestconfig::showKO)
+std::string UnitTest::getTestCaseInfo() const {
+	if (AllTestCaseOk() && UnitTestconfig::showKO)
 		return "";
-	if (UnitTestconfig::showKODetails)
-		return getKOTestCaseDetailed();
+	if (!UnitTestconfig::showAll && !UnitTestconfig::showKO && !UnitTestconfig::showDetails)
+		return "";
+	if (UnitTestconfig::showDetails)
+		return getTestCaseDetailed();
 	else
-		return getKOTestCaseOneLine();
+		return getTestCaseOneLine();
 }
 
-std::string UnitTest::getKOTestCaseOneLine() const
+std::string UnitTest::getTestCaseOneLine() const
 {
 	std::stringstream ret;
 
-	if (AllTestCaseOk())
-		return "";
-	ret << "Failed: [";
+	if (UnitTestconfig::showKO)
+		ret << "Failed: [";
+	else
+		ret << "All Cases: [";
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		auto &test_case = allTestCase_[i];
-		if (test_case.ok)
+		// skip ok if only show KO
+		if (test_case.ok && UnitTestconfig::showKO)
 			continue;
 		ret << "(Case " << i + 1 << ": Input: '" << test_case.argv << "'; Output: '"
 				  << test_case.actualOutput << "'), ";
@@ -183,13 +197,14 @@ std::string UnitTest::getKOTestCaseOneLine() const
 	return ret.str();
 }
 
-std::string UnitTest::getKOTestCaseDetailed() const {
+std::string UnitTest::getTestCaseDetailed() const {
 	std::stringstream ret;
 
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		auto &testCase = allTestCase_[i];
-		if (testCase.ok)
+		// skip ok if only show KO
+		if (testCase.ok && UnitTestconfig::showKO)
 			continue;
 		ret << "==Case " << i + 1 << std::setw(100 - 20) << std::setfill('=') << "\n"
 				  << "Input    : " << testCase.argv
@@ -200,6 +215,8 @@ std::string UnitTest::getKOTestCaseDetailed() const {
 		}
 		else
 			ret << "\nError    : " << testCase.stdError;
+		if (!UnitTestconfig::showKO)
+			ret << "\nStatus   : " << ((testCase.ok)? "OK": "KO");
 		ret << "\n\n";
 
 		if (!UnitTestconfig::showAll)
