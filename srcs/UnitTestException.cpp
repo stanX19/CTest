@@ -18,7 +18,7 @@ NothingTurnedIn::NothingTurnedIn()
     : UnitTestException("Nothing turned in", "") {}
 
 FileNotFoundError::FileNotFoundError(const std::string& message)
-    : UnitTestException("Required file not Found", message) {}
+    : UnitTestException("Required file not found", message) {}
 
 CompilationError::CompilationError(const std::string& message)
 	: UnitTestException("Compilation error", message) {}
