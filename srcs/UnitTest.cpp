@@ -187,19 +187,20 @@ std::string UnitTest::getTestCaseOneLine() const
 	if (UnitTestconfig::showKO)
 		ret << "Failed: [";
 	else
-		ret << "All Cases: [";
+		ret << "All Cases: [\n";
 	for (size_t i = 0; i < allTestCase_.size(); i++)
 	{
 		auto &test_case = allTestCase_[i];
 		// skip ok if only show KO
 		if (test_case.ok && UnitTestconfig::showKO)
 			continue;
-		ret << "(Case " << i + 1 << ": Input: '" << utils::reduceStringTo(test_case.argv, UnitTestconfig::lineLength)
-			<< "'; Output: '" << utils::reduceStringTo(test_case.actualOutput, UnitTestconfig::lineLength) << "'), ";
+		ret << "(Case " << i + 1 << ": Input: '"
+			<< utils::reduceStringTo(test_case.argv, UnitTestconfig::lineLength)
+			<< "'; Output: '" << utils::reduceStringTo(test_case.actualOutput, UnitTestconfig::lineLength) << "'),\n";
 		if (!UnitTestconfig::showAll)
 			break ;
 	}
-	ret << "\b\b]\n";
+	ret << "]\n";
 	return ret.str();
 }
 
