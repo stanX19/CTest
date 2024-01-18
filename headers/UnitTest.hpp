@@ -22,6 +22,7 @@ namespace UnitTestconfig {
 	inline bool showDetails = 0;
 	inline bool showAll = 0;
 	inline bool showListCase = 0;
+	inline int lineLength = 100;
 	inline std::string targetDir = ".";
 	inline static const std::string headers =
 		"\n#include <stdio.h>\n\
@@ -37,12 +38,13 @@ namespace UnitTestconfig {
 
 class UnitTest {
 public:
-	UnitTest(std::string directory, int timeout=30);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
+	UnitTest(std::string directory, int timeout=1);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
     void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
 	void addTemporaryMainFile(const std::string& function_templates, const std::string& main_content);
     void addTemporaryCodeFile(const std::string& content);
 	void addTestCase(const std::string& argv, const std::string& expectedOutput);
+	void addSameInOutCase(const std::string& inOutStr);
 	void printStatus() const;
     bool run();
 

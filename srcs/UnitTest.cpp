@@ -20,7 +20,7 @@ void UnitTest::addTemporaryMainFile(const std::string &templates, const std::str
 		"\n#define TIMEOUT " + std::to_string(timeout_) + "\n"
 		"\n"
         "void timeout_handler(int signum) {\n"
-        "    fprintf(stderr, \"Timeout (t > TIMEOUT)\\n\");\n"
+        "    fprintf(stderr, \"Timeout (t > %i.00s)\", TIMEOUT);\n"
         "    exit(1);\n"
         "    (void)signum;\n"
         "}\n"
@@ -45,6 +45,10 @@ void UnitTest::addTestCase(const std::string &argv, const std::string &expectedO
 	test_case.expectedOutput = expectedOutput;
 	test_case.argv = argv;
 	allTestCase_.push_back(test_case);
+}
+
+void UnitTest::addSameInOutCase(const std::string& inOutStr) {
+	addTestCase(inOutStr, inOutStr);
 }
 
 void UnitTest::printStatus() const {
@@ -118,6 +122,8 @@ bool UnitTest::runAllTestCase()
 	for (t_test_case &test_case : allTestCase_)
 	{
 		runTestCase(test_case);
+		if (!test_case.ok && !(UnitTestconfig::showAll || UnitTestconfig::showListCase))
+			break ;
 	}
 	// if (!AllTestCaseOk())
 	// 	throw TestCaseKO(getKOMessage());
@@ -188,8 +194,8 @@ std::string UnitTest::getTestCaseOneLine() const
 		// skip ok if only show KO
 		if (test_case.ok && UnitTestconfig::showKO)
 			continue;
-		ret << "(Case " << i + 1 << ": Input: '" << test_case.argv << "'; Output: '"
-				  << test_case.actualOutput << "'), ";
+		ret << "(Case " << i + 1 << ": Input: '" << utils::reduceStringTo(test_case.argv, UnitTestconfig::lineLength)
+			<< "'; Output: '" << utils::reduceStringTo(test_case.actualOutput, UnitTestconfig::lineLength) << "'), ";
 		if (!UnitTestconfig::showAll)
 			break ;
 	}
@@ -206,15 +212,16 @@ std::string UnitTest::getTestCaseDetailed() const {
 		// skip ok if only show KO
 		if (testCase.ok && UnitTestconfig::showKO)
 			continue;
-		ret << "==Case " << i + 1 << std::setw(100 - 20) << std::setfill('=') << "\n"
-				  << "Input    : " << testCase.argv
-				  << "\nOutput   : " << testCase.actualOutput << "\n"
-				  << std::setw(100) << std::setfill('=');
+		ret << "==Case " << i + 1;
+		utils::fillLine(ret, '=', UnitTestconfig::lineLength);
+		ret << "Input    : " << testCase.argv
+			<< "\nOutput   : " << testCase.actualOutput << "\n";
+		utils::fillLine(ret, '=', UnitTestconfig::lineLength);
 		if (!testCase.error) {
-			ret << "\nExpected : " << testCase.expectedOutput;
+			ret << "Expected : " << testCase.expectedOutput;
 		}
 		else
-			ret << "\nError    : " << testCase.stdError;
+			ret << "Error    : " << testCase.stdError;
 		if (!UnitTestconfig::showKO)
 			ret << "\nStatus   : " << ((testCase.ok)? "OK": "KO");
 		ret << "\n\n";
