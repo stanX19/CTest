@@ -30,7 +30,7 @@ namespace UnitTestconfig {
 		#include <string.h>\n\
 		#include <math.h>\n\
 		#include <signal.h>\n";
-	inline static const std::string CC = "gcc";
+	inline static const std::string CC = "clang";
 	inline static const std::string CFLAGS = "-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments";
 	bool parseArgv(int argc, char**argv);
 }
