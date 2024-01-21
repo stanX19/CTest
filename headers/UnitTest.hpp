@@ -31,7 +31,7 @@ namespace UnitTestconfig {
 		#include <math.h>\n\
 		#include <signal.h>\n";
 	inline static const std::string CC = "clang";
-	inline static const std::string CFLAGS = "-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments";
+	inline static const std::string CFLAGS = "-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments -fsanitize=address";
 	bool parseArgv(int argc, char**argv);
 }
 

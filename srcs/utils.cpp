@@ -37,16 +37,15 @@ void utils::fillLine(std::stringstream &ss, const char fillChar, std::size_t len
     ss << std::setfill(' ');
 }
 std::string utils::generateRandomString(std::size_t length) {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const std::size_t charsetSize = sizeof(charset) - 1;  // Exclude the null terminator
+	static int idx;
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    static const size_t charsetSize = sizeof(charset) - 1;  // Exclude the null terminator
 
     std::string randomString;
-    randomString.reserve(length);
 
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-
-    for (std::size_t i = 0; i < length; ++i) {
-        randomString += charset[std::rand() % charsetSize];
+    for (size_t i = 0; i < length; ++i) {
+        randomString += charset[idx % charsetSize];
+		idx = ++idx % charsetSize;
     }
 
     return randomString;
