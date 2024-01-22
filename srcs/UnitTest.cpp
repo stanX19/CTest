@@ -195,8 +195,8 @@ std::string UnitTest::getTestCaseOneLine() const
 		if (test_case.ok && UnitTestconfig::showKO)
 			continue;
 		ret << "(Case " << i + 1 << ": Input: '"
-			<< utils::reduceStringTo(test_case.argv, UnitTestconfig::lineLength)
-			<< "'; Output: '" << utils::reduceStringTo(test_case.actualOutput, UnitTestconfig::lineLength) << "'),\n";
+			<< getFormatDisplay(utils::reduceStringTo(test_case.argv, UnitTestconfig::lineLength))
+			<< "'; Output: '" << getFormatDisplay(utils::reduceStringTo(test_case.actualOutput, UnitTestconfig::lineLength)) << "'),\n";
 		if (!UnitTestconfig::showAll)
 			break ;
 	}
@@ -215,14 +215,14 @@ std::string UnitTest::getTestCaseDetailed() const {
 			continue;
 		ret << "==Case " << i + 1;
 		utils::fillLine(ret, '=', UnitTestconfig::lineLength);
-		ret << "Input    : " << testCase.argv
-			<< "\nOutput   : " << testCase.actualOutput << "\n";
+		ret << "Input    : " << getFormatDisplay(testCase.argv)
+			<< "\nOutput   : " << getFormatDisplay(testCase.actualOutput, testCase.expectedOutput) << "\n";
 		utils::fillLine(ret, '=', UnitTestconfig::lineLength);
 		if (!testCase.error) {
-			ret << "Expected : " << testCase.expectedOutput;
+			ret << "Expected : " << getFormatDisplay(testCase.expectedOutput, testCase.actualOutput);
 		}
 		else
-			ret << "Error    : " << testCase.stdError;
+			ret << "Error    : " << getFormatDisplay(testCase.stdError);
 		if (!UnitTestconfig::showKO)
 			ret << "\nStatus   : " << ((testCase.ok)? "OK": "KO");
 		ret << "\n\n";
@@ -231,4 +231,37 @@ std::string UnitTest::getTestCaseDetailed() const {
 			break ;
 	}
 	return ret.str();
+}
+
+std::string UnitTest::getFormatDisplay(std::string str) const {
+	return getFormatDisplay(str, str);
+}
+
+std::string UnitTest::getFormatDisplay(std::string str, std::string cmp) const {
+	std::ostringstream oss;
+
+	int is_colored = 0;
+	for (size_t i = 0; i < str.size(); i++) {
+		if ((i >= cmp.size() || str[i] != cmp[i])) {
+			if (!is_colored) {
+				oss << color::BG_YELLOW;
+				is_colored = 1;
+			}
+		} else if (is_colored) {
+			oss << color::RESET;
+			is_colored = 0;
+		}
+		if (str[i] < 32 || str[i] > 126) {
+			if (!is_colored)
+				oss << color::CYAN;
+			else
+				oss << color::BG_YELLOW_CLR_BLUE;
+            oss << std::hex << "\\" << std::setw(2) << std::setfill('0') << (int)(unsigned char)(str[i]) << std::dec << color::RESET;
+			is_colored = 0;
+        } else {
+            oss << str[i];
+        }
+	}
+	oss << color::RESET;
+	return oss.str();
 }

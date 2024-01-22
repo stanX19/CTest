@@ -18,7 +18,7 @@ CFLAGS		= -Wall -Wextra -Werror -fsanitize=address -g3 -std=c++17
 UP			= \033[1A
 FLUSH		= \033[2K
 
-all: $(NAME)
+all: $(UNITTEST_LIB) $(NAME)
 
 $(NAME): $(OBJDIRS) $(OBJS) $(HEADERS)
 	$(AR) $(NAME) $(OBJS)
@@ -33,6 +33,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS) | $(OBJDIRS)
 	@echo "$(UP)$(FLUSH)$(UP)"
 
 clean:
+	@find . -name "temp*" -type f -delete
 	@$(RM) $(OBJDIR)
 
 fclean: clean

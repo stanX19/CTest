@@ -53,11 +53,10 @@ std::string utils::generateRandomString(std::size_t length) {
 std::string utils::formatUnprintable(const std::string &str) {
     std::ostringstream oss;
     
+	oss << std::hex;
     for (char ch : str) {
         if (ch < 32 || ch > 126) {
-            oss << "^" << static_cast<char>(ch + 64);
-        } else if (ch == 127) {
-            oss << "^?";
+            oss << "\\" << (int)(unsigned char)(ch);
         } else {
             oss << ch;
         }

@@ -71,7 +71,8 @@ private:
 	std::string getTestCaseInfo() const;
 	std::string getTestCaseDetailed() const;
 	std::string getTestCaseOneLine() const;
-	
+	std::string getFormatDisplay(std::string str) const;
+	std::string getFormatDisplay(std::string str, std::string cmp) const;
 };
 
 #endif
