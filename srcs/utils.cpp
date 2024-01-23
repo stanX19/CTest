@@ -45,7 +45,8 @@ std::string utils::generateRandomString(std::size_t length) {
 
     for (size_t i = 0; i < length; ++i) {
         randomString += charset[idx % charsetSize];
-		idx = ++idx % charsetSize;
+		++idx;
+		idx %= charsetSize;
     }
 
     return randomString;
