@@ -39,11 +39,12 @@ namespace UnitTestconfig {
 class UnitTest {
 public:
 	UnitTest(std::string directory, int timeout=1);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
-    void addRequiredFile(const std::string& filename);
+    virtual ~UnitTest() = default;
+	void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
     void addTemporaryCodeFile(const std::string& content);
 	virtual void addTemporaryMainFile(const std::string& function_templates, const std::string main_content, const std::string ignore_this="");
-	virtual void addTestCase(const std::string& argv, const std::string& expectedOutput);
+	void addTestCase(const std::string& argv, const std::string& expectedOutput);
 	void addTestCaseSameInOut(const std::string& inOutStr);
 	void printStatus() const;
     bool run();
@@ -82,6 +83,7 @@ private:
 class UnitTestGenExpected : public UnitTest {
 public:
 	UnitTestGenExpected(std::string directory, int timeout=1);
+	virtual ~UnitTestGenExpected() = default;
 	void addTestCase(const std::string& argv);
 	void addTemporaryMainFile(const std::string& function_templates, const std::string printExpected, const std::string printOutput) override;
 protected:
