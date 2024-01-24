@@ -27,6 +27,7 @@ namespace UnitTestconfig {
 		"\n#include <stdio.h>\n\
 		#include <stdlib.h>\n\
 		#include <unistd.h>\n\
+		#include <fcntl.h>\n\
 		#include <string.h>\n\
 		#include <math.h>\n\
 		#include <signal.h>\n";
@@ -40,32 +41,35 @@ public:
 	UnitTest(std::string directory, int timeout=1);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
     void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
-	void addTemporaryMainFile(const std::string& function_templates, const std::string& main_content);
     void addTemporaryCodeFile(const std::string& content);
-	void addTestCase(const std::string& argv, const std::string& expectedOutput);
-	void addSameInOutCase(const std::string& inOutStr);
+	virtual void addTemporaryMainFile(const std::string& function_templates, const std::string main_content, const std::string ignore_this="");
+	virtual void addTestCase(const std::string& argv, const std::string& expectedOutput);
+	void addTestCaseSameInOut(const std::string& inOutStr);
 	void printStatus() const;
     bool run();
 
-private:
+protected:
+	TemporaryFile executableFile_;
+	TemporaryFile actualOutputFile_;
+	TemporaryFile errorFile_;
     std::vector<std::string> requiredFilePaths_;
 	std::vector<TemporaryFile> allTempCodeFiles_;
 	std::vector<TemporaryFile> allTemporaryFiles_;
 	std::vector<t_test_case> allTestCase_;
+	std::vector<t_test_case> allGenExpectedTestCase_;
     std::string directory_;
-	TemporaryFile executableFile_;
-	TemporaryFile outputFile_;
-	TemporaryFile errorFile_;
     std::string CC_;
     std::string CFLAGS_;
 	size_t timeout_;
 
+	virtual bool runTestCase(t_test_case &test_case);
+
+private:
 	void validateRequiredFiles();
 	void compile();
-	bool runTestCase(t_test_case &test_case);
-	bool runAllTestCase();
 	void handleException(const UnitTestException &exc);
 	bool AllTestCaseOk() const;
+	bool runAllTestCase();
 	void printAllTestCase() const;
 	void printTestCaseInfo() const;
 	std::string getTestCaseInfo() const;
@@ -73,6 +77,18 @@ private:
 	std::string getTestCaseOneLine() const;
 	std::string getFormatDisplay(std::string str) const;
 	std::string getFormatDisplay(std::string str, std::string cmp) const;
+};
+
+class UnitTestGenExpected : public UnitTest {
+public:
+	UnitTestGenExpected(std::string directory, int timeout=1);
+	void addTestCase(const std::string& argv);
+	void addTemporaryMainFile(const std::string& function_templates, const std::string printExpected, const std::string printOutput) override;
+protected:
+	TemporaryFile expectedOutputFile_;
+
+	bool runTestCase(t_test_case &test_case) override;
+private:
 };
 
 #endif

@@ -15,24 +15,25 @@ void UnitTest::addTemporaryFile(const std::string &content) {
 }
 
 // will be compiled together
-void UnitTest::addTemporaryMainFile(const std::string &templates, const std::string &contents) {
+void UnitTest::addTemporaryMainFile(const std::string &templates, std::string contents, std::string filler) {
     std::string code = 
 		"\n#define TIMEOUT " + std::to_string(timeout_) + "\n"
 		"\n"
         "void timeout_handler(int signum) {\n"
-        "    fprintf(stderr, \"Timeout (t > %i.00s)\", TIMEOUT);\n"
-        "    exit(1);\n"
-        "    (void)signum;\n"
+        "	fprintf(stderr, \"Timeout (t > %i.00s)\", TIMEOUT);\n"
+        "	exit(1);\n"
+        "	(void)signum;\n"
         "}\n"
         "\n\nint main(int argc, char **argv) {\n"
-        "    signal(SIGALRM, timeout_handler);\n"
-        "    alarm(TIMEOUT);\n"
-        "    " + contents + ";\n"
-        "    alarm(0)\n;"
-        "    (void)argc; (void)argv;\n"
+        "	signal(SIGALRM, timeout_handler);\n"
+        "	alarm(TIMEOUT);\n"
+        "	" + contents + ";\n"
+        "	alarm(0)\n;"
+        "	(void)argc; (void)argv;\n"
         "}";
     
     addTemporaryCodeFile(templates + code);
+	(void)filler;
 }
 
 // will be compiled together
@@ -47,7 +48,7 @@ void UnitTest::addTestCase(const std::string &argv, const std::string &expectedO
 	allTestCase_.push_back(test_case);
 }
 
-void UnitTest::addSameInOutCase(const std::string& inOutStr) {
+void UnitTest::addTestCaseSameInOut(const std::string& inOutStr) {
 	addTestCase(inOutStr, inOutStr);
 }
 
@@ -130,13 +131,12 @@ bool UnitTest::runAllTestCase()
 	return AllTestCaseOk();
 }
 
-bool UnitTest::runTestCase(t_test_case &test_case)
-{
-	std::string redirect = " > " + outputFile_.filename() + " 2> " + errorFile_.filename();
+bool UnitTest::runTestCase(t_test_case &test_case) {
+	std::string redirect = " > " + actualOutputFile_.filename() + " 2> " + errorFile_.filename();
 	std::string runCommand = "{ ./" + executableFile_.filename() + " " + test_case.argv + " ;}" + redirect;
 	std::system(runCommand.c_str());
 
-	test_case.actualOutput = outputFile_.readContent();
+	test_case.actualOutput = actualOutputFile_.readContent();
 	test_case.stdError = errorFile_.readContent();
 
 	test_case.error = !test_case.stdError.empty();
@@ -144,13 +144,11 @@ bool UnitTest::runTestCase(t_test_case &test_case)
 	return test_case.ok;
 }
 
-
 bool UnitTest::AllTestCaseOk() const {
 	return std::all_of(allTestCase_.begin(), allTestCase_.end(),
 		[](const t_test_case &test_case){ return test_case.ok; }
 	);
 }
-
 
 void UnitTest::printAllTestCase() const {
 	for (size_t i = 0; i < allTestCase_.size(); i++)
@@ -264,4 +262,53 @@ std::string UnitTest::getFormatDisplay(std::string str, std::string cmp) const {
 	}
 	oss << color::RESET;
 	return oss.str();
+}
+
+UnitTestGenExpected::UnitTestGenExpected(std::string directory, int timeout)
+	: UnitTest(directory, timeout) {}
+
+void UnitTestGenExpected::addTemporaryMainFile(const std::string &templates, const std::string printExpected, const std::string printOutput) {
+    std::string code = 
+		"\n#define TIMEOUT " + std::to_string(timeout_) + "\n"
+		"\n"
+        "void timeout_handler(int signum) {\n"
+        "	fprintf(stderr, \"Timeout (t > %i.00s)\", TIMEOUT);\n"
+        "	exit(1);\n"
+        "	(void)signum;\n"
+        "}\n"
+        "\n\nint main(int argc, char **argv) {\n"
+        "	signal(SIGALRM, timeout_handler);\n"
+        "	alarm(TIMEOUT);\n"
+        "	" + printOutput + ";\n"
+        "	alarm(0)\n;"
+		"	int fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC);\n"
+		"	if (fd == -1) { printf(\" Error opening argv[1] (for expected output)\"); return 1; }\n"
+		"	fflush(stdout);\n"
+		"	dup2(fd, 1)\n;"
+		"	close(fd);"
+		"	" + printExpected + ";\n"
+        "	(void)argc; (void)argv;\n"
+        "}";
+    addTemporaryCodeFile(templates + code);
+}
+
+void UnitTestGenExpected::addTestCase(const std::string &argv) {
+	t_test_case test_case;
+	test_case.argv = argv;
+	allTestCase_.push_back(test_case);
+}
+
+bool UnitTestGenExpected::runTestCase(t_test_case &test_case) {
+	std::string redirect = " > " + actualOutputFile_.filename() + " 2> " + errorFile_.filename();
+	std::string runCommand = "{ ./" + executableFile_.filename() + " " + expectedOutputFile_.filename()
+								+ " " + test_case.argv + " ;}" + redirect;
+	std::system(runCommand.c_str());
+
+	test_case.actualOutput = actualOutputFile_.readContent();
+	test_case.stdError = errorFile_.readContent();
+	test_case.expectedOutput = expectedOutputFile_.readContent();
+
+	test_case.error = !test_case.stdError.empty();
+	test_case.ok = (test_case.actualOutput == test_case.expectedOutput) && (!test_case.error);
+	return test_case.ok;
 }
