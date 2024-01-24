@@ -1,7 +1,8 @@
 #include "UnitTest.hpp"
 
-UnitTest::UnitTest(std::string directory, int timeout)
-    : directory_(directory), CC_(UnitTestconfig::CC), CFLAGS_(UnitTestconfig::CFLAGS), timeout_(timeout) {}
+UnitTest::UnitTest(std::string directory, int timeout, bool displayLineBreak)
+    : directory_(directory), CC_(UnitTestconfig::CC), CFLAGS_(UnitTestconfig::CFLAGS),
+		timeout_(timeout), displayLineBreak_(displayLineBreak) {}
 
 // .c type file will be compiled together
 void UnitTest::addRequiredFile(const std::string &filename) {
@@ -254,7 +255,10 @@ std::string UnitTest::getFormatDisplay(std::string str, std::string cmp) const {
 				oss << color::CYAN;
 			else
 				oss << color::BG_YELLOW_CLR_BLUE;
-            oss << std::hex << "\\" << std::setw(2) << std::setfill('0') << (int)(unsigned char)(str[i]) << std::dec << color::RESET;
+			if (str[i] == '\n' && displayLineBreak_)
+				oss << color::RESET <<"$\n";
+			else
+            	oss << std::hex << "\\" << std::setw(2) << std::setfill('0') << (int)(unsigned char)(str[i]) << std::dec << color::RESET;
 			is_colored = 0;
         } else {
             oss << str[i];
@@ -264,8 +268,8 @@ std::string UnitTest::getFormatDisplay(std::string str, std::string cmp) const {
 	return oss.str();
 }
 
-UnitTestGenExpected::UnitTestGenExpected(std::string directory, int timeout)
-	: UnitTest(directory, timeout) {}
+UnitTestGenExpected::UnitTestGenExpected(std::string directory, int timeout, bool displayLineBreak)
+	: UnitTest(directory, timeout, displayLineBreak) {}
 
 void UnitTestGenExpected::addTemporaryMainFile(const std::string &templates, const std::string printExpected, const std::string printOutput) {
     std::string code = 

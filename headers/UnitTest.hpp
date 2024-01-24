@@ -38,7 +38,7 @@ namespace UnitTestconfig {
 
 class UnitTest {
 public:
-	UnitTest(std::string directory, int timeout=1);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
+	UnitTest(std::string directory, int timeout=1, bool displayLineBreak=false);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
     virtual ~UnitTest() = default;
 	void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
@@ -62,6 +62,7 @@ protected:
     std::string CC_;
     std::string CFLAGS_;
 	size_t timeout_;
+	bool displayLineBreak_;
 
 	virtual bool runTestCase(t_test_case &test_case);
 
@@ -82,7 +83,7 @@ private:
 
 class UnitTestGenExpected : public UnitTest {
 public:
-	UnitTestGenExpected(std::string directory, int timeout=1);
+	UnitTestGenExpected(std::string directory, int timeout=1, bool displayLineBreak=false);
 	virtual ~UnitTestGenExpected() = default;
 	void addTestCase(const std::string& argv);
 	void addTemporaryMainFile(const std::string& function_templates, const std::string printExpected, const std::string printOutput) override;
