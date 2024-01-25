@@ -184,7 +184,7 @@ std::string UnitTest::getTestCaseOneLine() const
 	std::stringstream ret;
 
 	if (UnitTestconfig::showKO)
-		ret << "Failed: [";
+		ret << "Failed: [\n";
 	else
 		ret << "All Cases: [\n";
 	for (size_t i = 0; i < allTestCase_.size(); i++)
