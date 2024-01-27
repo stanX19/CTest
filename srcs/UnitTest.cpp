@@ -20,7 +20,7 @@ void UnitTest::addTemporaryMainFile(const std::string &templates, std::string co
     std::string code = 
 		"\n#define TIMEOUT " + std::to_string(timeout_) + "\n"
 		"\n"
-        "void timeout_handler(int signum) {\n"
+        "static void timeout_handler(int signum) {\n"
         "	fprintf(stderr, \"Timeout (t > %i.00s)\", TIMEOUT);\n"
         "	exit(1);\n"
         "	(void)signum;\n"
@@ -275,7 +275,7 @@ void UnitTestGenExpected::addTemporaryMainFile(const std::string &templates, con
     std::string code = 
 		"\n#define TIMEOUT " + std::to_string(timeout_) + "\n"
 		"\n"
-        "void timeout_handler(int signum) {\n"
+        "static void timeout_handler(int signum) {\n"
         "	fprintf(stderr, \"Timeout (t > %i.00s)\", TIMEOUT);\n"
         "	exit(1);\n"
         "	(void)signum;\n"
