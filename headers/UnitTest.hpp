@@ -5,6 +5,7 @@
 # include "UnitTestException.hpp"
 # include "utils.hpp"
 # include "color.hpp"
+# include "TerminationHandler.hpp"
 
 typedef struct s_test_case {
 	std::string argv;

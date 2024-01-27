@@ -10,4 +10,5 @@
 #include <sstream>
 #include <map>
 #include <set>
+#include <functional>
 #endif
