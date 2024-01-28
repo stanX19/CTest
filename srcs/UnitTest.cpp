@@ -37,6 +37,7 @@ void UnitTest::addTemporaryMainFile(const std::string &templates, std::string co
         "	alarm(TIMEOUT);\n"
         "	" + contents + ";\n"
         "	alarm(0)\n;"
+		"	fflush(stdout);\n"
         "	(void)argc; (void)argv;\n"
         "}";
     
@@ -283,6 +284,8 @@ std::string UnitTest::getFormatDisplay(std::string str, std::string cmp) const {
             oss << str[i];
         }
 	}
+	if (displayLineBreak_)
+		oss << '$';
 	oss << color::RESET;
 	return oss.str();
 }
@@ -310,6 +313,7 @@ void UnitTestGenExpected::addTemporaryMainFile(const std::string &templates, con
 		"	dup2(fd, 1)\n;"
 		"	close(fd);"
 		"	" + printExpected + ";\n"
+		"	fflush(stdout);\n"
         "	(void)argc; (void)argv;\n"
         "}";
     addTemporaryCodeFile(templates + code);
