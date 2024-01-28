@@ -221,10 +221,10 @@ std::string UnitTest::getTestCaseDetailed() const {
 			ret << "Expected : " << getFormatDisplay(testCase.expectedOutput, testCase.actualOutput);
 		}
 		else
-			ret << "Error    : " << getFormatDisplay(testCase.stdError);
+			ret << "Error    : " << utils::reduceStringTo(testCase.stdError, UnitTestconfig::lineLength * 10);
 		if (!UnitTestconfig::showKO)
 			ret << "\nStatus   : " << ((testCase.ok)? "OK": "KO");
-		ret << "\n\n";
+		ret << "\n\n\n";
 
 		if (!UnitTestconfig::showAll)
 			break ;
