@@ -11,7 +11,7 @@ TemporaryFile::TemporaryFile(const TemporaryFile &other) : type_(other.type_) {
 }
 
 TemporaryFile::~TemporaryFile() {
-	if (std::remove(filename_.c_str()) != 0) {
+ 	if (std::remove(filename_.c_str()) != 0) {
 		std::cerr << "Error deleting temporary file '" << filename_ << "'" << std::endl;
 	}
 }
@@ -20,6 +20,11 @@ void TemporaryFile::setContent(const std::string& content) {
 	std::ofstream file(filename_);
 	file << content;
 	file.close();
+}
+
+void TemporaryFile::setFilename(const std::string& name) {
+	std::rename(filename_.c_str(), name.c_str());
+	filename_ = name;
 }
 
 std::string TemporaryFile::filename() const {

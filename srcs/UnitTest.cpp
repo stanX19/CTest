@@ -1,8 +1,15 @@
 #include "UnitTest.hpp"
 
 UnitTest::UnitTest(std::string directory, int timeout, bool displayLineBreak)
-    : directory_(directory), CC_(UnitTestconfig::CC), CFLAGS_(UnitTestconfig::CFLAGS),
+    : directory_(directory), name_(directory), CC_(UnitTestconfig::CC), CFLAGS_(UnitTestconfig::CFLAGS),
 		timeout_(timeout), displayLineBreak_(displayLineBreak) {}
+
+void UnitTest::configure(std::string directory, int timeout, bool displayLineBreak) {
+	directory_ = directory;
+	name_ = directory;
+	timeout_ = timeout;
+	displayLineBreak_ = displayLineBreak;
+}
 
 // .c type file will be compiled together
 void UnitTest::addRequiredFile(const std::string &filename) {
@@ -53,11 +60,23 @@ void UnitTest::addTestCaseSameInOut(const std::string& inOutStr) {
 	addTestCase(inOutStr, inOutStr);
 }
 
+void UnitTest::setExecutableName(const std::string& name) {
+	executableFile_.setFilename(name);
+}
+
+void UnitTest::setDirectory(const std::string& path) {
+	directory_ = path;
+}
+
+void UnitTest::setName(const std::string& name) {
+	name_ = name;
+}
+
 void UnitTest::printStatus() const {
 	if (AllTestCaseOk())
-		utils::printOK(directory_);
+		utils::printOK(name_);
 	else {
-		utils::printKO(directory_);
+		utils::printKO(name_);
 	}
 }
 
@@ -77,7 +96,7 @@ bool UnitTest::run() {
 }
 
 void UnitTest::handleException(const UnitTestException &e) {
-	std::cout << color::redText(directory_ + ": " + e.type()) << std::endl;
+	std::cout << color::redText(name_ + ": " + e.type()) << std::endl;
 	if ((UnitTestconfig::showKO || UnitTestconfig::showDetails) && *e.what())
 		std::cout << ": " << e.what() << std::endl;
 }

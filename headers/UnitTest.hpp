@@ -38,14 +38,18 @@ namespace UnitTestconfig {
 
 class UnitTest {
 public:
-	UnitTest(std::string directory, int timeout=1, bool displayLineBreak=false);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
+	UnitTest(std::string directory=".", int timeout=1, bool displayLineBreak=false);  // , std::string CC="gcc", std::string CFLAGS="-Wall -Wextra -Werror -fmax-errors=1 -Qunused-arguments");
     virtual ~UnitTest() = default;
+	void configure(std::string directory=".", int timeout=1, bool displayLineBreak=false);
 	void addRequiredFile(const std::string& filename);
     void addTemporaryFile(const std::string& content);
     void addTemporaryCodeFile(const std::string& content);
 	virtual void addTemporaryMainFile(const std::string& function_templates, const std::string main_content, const std::string ignore_this="");
 	void addTestCase(const std::string& argv, const std::string& expectedOutput);
 	void addTestCaseSameInOut(const std::string& inOutStr);
+	void setExecutableName(const std::string& name);
+	void setDirectory(const std::string& path);
+	void setName(const std::string& name);
 	void printStatus() const;
     bool run();
 
@@ -59,6 +63,7 @@ protected:
 	std::vector<t_test_case> allTestCase_;
 	std::vector<t_test_case> allGenExpectedTestCase_;
     std::string directory_;
+    std::string name_;
     std::string CC_;
     std::string CFLAGS_;
 	size_t timeout_;

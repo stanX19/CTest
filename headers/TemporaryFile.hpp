@@ -9,6 +9,7 @@ public:
 	TemporaryFile(const TemporaryFile &other);
     ~TemporaryFile();
     void setContent(const std::string& content);
+	void setFilename(const std::string& name);
 	std::string readContent() const; 
 	std::string filename() const;
 private:
