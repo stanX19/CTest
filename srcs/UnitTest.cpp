@@ -84,6 +84,7 @@ void UnitTest::printStatus() const {
 bool UnitTest::run() {
 	try	{
 		validateRequiredFiles();
+		validateNorme();
 		compile();
 		runAllTestCase();
 		printStatus();
@@ -109,6 +110,16 @@ bool UnitTest::norminette(const std::string &path) {
 	return !errorFile_.readContent().empty();
 }
 
+void UnitTest::validateNorme() {
+	std::string message;
+	for (auto &path: requiredFilePaths_) {
+		if (norminette(path))
+			message += path + "\n" + errorFile_.readContent();
+	}
+	if (!message.empty())
+		throw NorminetteError(message);
+}
+
 void UnitTest::validateRequiredFiles() {
 	if (!utils::pathExists(directory_))
 		throw NothingTurnedIn();
@@ -120,12 +131,6 @@ void UnitTest::validateRequiredFiles() {
 	}
 	if (!message.empty())
 		throw FileNotFoundError(message);
-	for (auto &path: requiredFilePaths_) {
-		if (norminette(path))
-			message += path + "\n" + errorFile_.readContent();
-	}
-	if (!message.empty())
-		throw NorminetteError(message);
 }
 
 void UnitTest::compile()
@@ -161,7 +166,7 @@ bool UnitTest::runAllTestCase()
 			break ;
 	}
 	// if (!AllTestCaseOk())
-	// 	throw TestCaseKO(getKOMessage());
+	//  	throw TestCaseKO(getTestCaseInfo());
 	return AllTestCaseOk();
 }
 
