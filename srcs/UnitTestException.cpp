@@ -26,5 +26,8 @@ CompilationError::CompilationError(const std::string& message)
 InvalidDirectory::InvalidDirectory(const std::string& message)
 	: UnitTestException("No such file or directory", message) {}
 
+NorminetteError::NorminetteError(const std::string& message)
+	: UnitTestException("Norme Error", message) {}
+
 InvalidFlagError::InvalidFlagError(const std::string& message)
 	: UnitTestException("Invalid flag", message) {}

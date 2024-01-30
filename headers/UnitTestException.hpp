@@ -38,6 +38,11 @@ public:
     InvalidDirectory(const std::string& message);
 };
 
+class NorminetteError : public UnitTestException {
+public:
+    NorminetteError(const std::string& message);
+};
+
 class InvalidFlagError : public UnitTestException {
 public:
     InvalidFlagError(const std::string& message);

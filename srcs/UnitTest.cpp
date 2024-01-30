@@ -102,6 +102,13 @@ void UnitTest::handleException(const UnitTestException &e) {
 		std::cout << ": " << e.what() << std::endl;
 }
 
+bool UnitTest::norminette(const std::string &path) {
+	std::string command = "(python3 -m norminette " + path +
+		" | grep Error:) > " + errorFile_.filename();
+	std::system(command.c_str());
+	return !errorFile_.readContent().empty();
+}
+
 void UnitTest::validateRequiredFiles() {
 	if (!utils::pathExists(directory_))
 		throw NothingTurnedIn();
@@ -109,10 +116,16 @@ void UnitTest::validateRequiredFiles() {
 	std::string message;
 	for (auto &path: requiredFilePaths_) {
 		if (!utils::pathExists(path))
-			message += path + " ";
+			message += path + "\n";
 	}
 	if (!message.empty())
 		throw FileNotFoundError(message);
+	for (auto &path: requiredFilePaths_) {
+		if (norminette(path))
+			message += path + "\n" + errorFile_.readContent();
+	}
+	if (!message.empty())
+		throw NorminetteError(message);
 }
 
 void UnitTest::compile()

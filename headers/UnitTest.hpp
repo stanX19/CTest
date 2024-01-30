@@ -73,6 +73,7 @@ protected:
 
 private:
 	void validateRequiredFiles();
+	bool norminette(const std::string &path);
 	void compile();
 	void handleException(const UnitTestException &exc);
 	bool AllTestCaseOk() const;
