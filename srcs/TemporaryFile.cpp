@@ -1,20 +1,22 @@
 #include "TemporaryFile.hpp"
 
-TemporaryFile::TemporaryFile(const std::string& content, const std::string& type) : type_(type) {
+TemporaryFile::TemporaryFile(const std::string& content, const std::string& type) : type_(type), ref_count_(std::make_shared<int>(1)) {
 	generateUniqueFilename();
 	setContent(content);
 }
 
-TemporaryFile::TemporaryFile(const TemporaryFile &other) : type_(other.type_) {
-	generateUniqueFilename();
-	setContent(other.readContent());
+TemporaryFile::TemporaryFile(const TemporaryFile &other)
+	: filename_(other.filename_), type_(other.type_), ref_count_(other.ref_count_)
+{
+	++(*ref_count_);
 }
 
 TemporaryFile::~TemporaryFile() {
+	if (--(*ref_count_) > 0)
+		return ;
  	if (std::remove(filename_.c_str()) != 0) {
 		std::cerr << "Error deleting temporary file '" << filename_ << "'" << std::endl;
 	}
-	//std::cout << "deleted " << filename_ << "\n"; 
 }
 
 void TemporaryFile::setContent(const std::string& content) {

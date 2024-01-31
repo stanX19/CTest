@@ -15,6 +15,7 @@ public:
 private:
     std::string filename_;
 	std::string type_;
+	std::shared_ptr<int> ref_count_;
 
     void generateUniqueFilename();
 };
