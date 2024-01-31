@@ -103,11 +103,16 @@ void UnitTest::handleException(const UnitTestException &e) {
 		std::cout << ": " << e.what() << std::endl;
 }
 
+// 0 = OK, 1 = KO
 bool UnitTest::norminette(const std::string &path) {
+	std::string norm = "python3 -m norminette";
 	std::string flags;
-	if (utils::getFileExtension(path) == "h")
+	std::string extension = utils::getFileExtension(path);
+	if (extension != "h" && extension != "c")
+		return 0;
+	if (extension == "h")
 		flags += "-R CheckDefine";
-	std::string command = "(python3 -m norminette " + flags + " " + path +
+	std::string command = "(" + norm + " " + flags + " " + path +
 		" | grep Error:) > " + errorFile_.filename();
 	std::system(command.c_str());
 	return !errorFile_.readContent().empty();
@@ -137,26 +142,36 @@ void UnitTest::validateRequiredFiles() {
 }
 
 void UnitTest::compile() {
-	std::string srcs;
-	std::string headers;
-	for (const std::string &filePath : requiredFilePaths_) {
+	std::vector<std::string> all_file_path = requiredFilePaths_;
+	// merge
+	for (const TemporaryFile &file : allTempCodeFiles_) {
+		all_file_path.push_back(file.filename());
+	}
+
+	std::string SRCS;
+	std::string IFLAGS;
+	std::set<std::string> headers;
+
+	// processing
+	for (const std::string &filePath : all_file_path) {
 		std::string extension = utils::getFileExtension(filePath);
 		if (!utils::pathExists(filePath))
 			throw FileNotFoundError(filePath);
 		if (extension == "c")
-			srcs += filePath + " ";
+			SRCS += filePath + " ";
 		if (extension == "h")
-			headers += filePath + " ";
+			headers.insert(utils::getParentDirectory(filePath));
 	}
-	for (const TemporaryFile &file : allTempCodeFiles_) {
-		srcs += " " + file.filename();
+
+	for (const std::string &dirPath : headers) {
+		IFLAGS += "-I" + dirPath + " ";
 	}
 	std::string redirect = " -o " + executableFile_.filename() + " 2> " + errorFile_.filename();
-	std::string compileCommand = CC_ + " " + CFLAGS_ + " " + headers + srcs + " " + redirect;
+	std::string compileCommand = CC_ + " " + CFLAGS_ + " " + SRCS + " " + IFLAGS + " " + redirect;
 	int compileResult = std::system(compileCommand.c_str());
 	if (compileResult != 0)
 	{
-		throw CompilationError(errorFile_.readContent());
+		throw CompilationError(compileCommand + "\n" + errorFile_.readContent());
 	}
 }
 

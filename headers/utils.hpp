@@ -3,7 +3,8 @@
 # include "common.hpp"
 # include "color.hpp"
 namespace utils {
-	std::string getFileExtension(const std::string& pat);
+	std::string getFileExtension(const std::string& path);
+	std::string getParentDirectory(const std::string filePathString);
 	bool pathExists(const std::string &path);
 	void printOK(const std::string &dir, const std::string &end="\n");
 	void printKO(const std::string &dir, const std::string &end="\n");
