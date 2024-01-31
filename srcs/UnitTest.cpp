@@ -104,7 +104,10 @@ void UnitTest::handleException(const UnitTestException &e) {
 }
 
 bool UnitTest::norminette(const std::string &path) {
-	std::string command = "(python3 -m norminette " + path +
+	std::string flags;
+	if (utils::getFileExtension(path) == "h")
+		flags += "-R CheckDefine";
+	std::string command = "(python3 -m norminette " + flags + " " + path +
 		" | grep Error:) > " + errorFile_.filename();
 	std::system(command.c_str());
 	return !errorFile_.readContent().empty();
@@ -133,24 +136,24 @@ void UnitTest::validateRequiredFiles() {
 		throw FileNotFoundError(message);
 }
 
-void UnitTest::compile()
-{
-	std::string compileCommand = CC_ + " " + CFLAGS_;
-	for (const std::string &filePath : requiredFilePaths_)
-	{
+void UnitTest::compile() {
+	std::string srcs;
+	std::string headers;
+	for (const std::string &filePath : requiredFilePaths_) {
+		std::string extension = utils::getFileExtension(filePath);
 		if (!utils::pathExists(filePath))
 			throw FileNotFoundError(filePath);
-		if (utils::getFileExtension(filePath) != "c")
-			continue;
-		compileCommand += " " + filePath;
+		if (extension == "c")
+			srcs += filePath + " ";
+		if (extension == "h")
+			headers += filePath + " ";
 	}
-	for (const TemporaryFile &file : allTempCodeFiles_)
-	{
-		compileCommand += " " + file.filename();
+	for (const TemporaryFile &file : allTempCodeFiles_) {
+		srcs += " " + file.filename();
 	}
-	compileCommand += " -o " + executableFile_.filename() + " 2> " + errorFile_.filename();
+	std::string redirect = " -o " + executableFile_.filename() + " 2> " + errorFile_.filename();
+	std::string compileCommand = CC_ + " " + CFLAGS_ + " " + headers + srcs + " " + redirect;
 	int compileResult = std::system(compileCommand.c_str());
-
 	if (compileResult != 0)
 	{
 		throw CompilationError(errorFile_.readContent());
