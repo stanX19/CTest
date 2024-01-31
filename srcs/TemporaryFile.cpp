@@ -14,16 +14,22 @@ TemporaryFile::~TemporaryFile() {
  	if (std::remove(filename_.c_str()) != 0) {
 		std::cerr << "Error deleting temporary file '" << filename_ << "'" << std::endl;
 	}
+	//std::cout << "deleted " << filename_ << "\n"; 
 }
 
 void TemporaryFile::setContent(const std::string& content) {
+	//std::cout << "modified " << filename_ << "\n";
 	std::ofstream file(filename_);
 	file << content;
 	file.close();
 }
 
 void TemporaryFile::setFilename(const std::string& name) {
-	std::rename(filename_.c_str(), name.c_str());
+	//std::cout << "rename " << filename_ << " " << name << "\n";
+	if (std::rename(filename_.c_str(), name.c_str()) != 0)
+	{
+		std::cerr << "Error renaming temporary file '" << filename_ << "' to '" << name << "'" << std::endl;
+	}
 	filename_ = name;
 }
 
@@ -50,4 +56,5 @@ void TemporaryFile::generateUniqueFilename() {
 		filename_ = oss.str();
 		counter++;
 	} while (utils::pathExists(filename_));
+	setContent("");
 }

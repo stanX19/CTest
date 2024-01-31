@@ -72,7 +72,6 @@ static void printUsage(char *name) {
 			  << "  -a : All - Display all test cases\n"
 			  << "  -f : Fail - Display only failed test results\n"
 			  << "  -d : Details - Display detailed test cases\n"
-			  << "\n"
 			  << "  --sn : Silence Norm - ignore norm errors\n"
 			  << "\n"
 			  << "Arguments:\n"

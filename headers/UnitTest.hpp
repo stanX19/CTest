@@ -43,8 +43,9 @@ public:
     virtual ~UnitTest() = default;
 	void configure(std::string directory=".", int timeout=1, bool displayLineBreak=false);
 	void addRequiredFile(const std::string& filename);
-    void addTemporaryFile(const std::string& content);
-    void addTemporaryCodeFile(const std::string& content);
+    void addTemporaryFile(const std::string& content, std::string extension="");
+    void addTemporaryCodeFile(const std::string& content, std::string name="");
+    void addTemporaryHeaderFile(const std::string& content, std::string name="");
 	virtual void addTemporaryMainFile(const std::string& function_templates, const std::string main_content, const std::string ignore_this="");
 	void addTestCase(const std::string& argv, const std::string& expectedOutput);
 	void addTestCaseSameInOut(const std::string& inOutStr);

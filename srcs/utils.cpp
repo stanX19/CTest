@@ -10,7 +10,9 @@ std::string utils::getFileExtension(const std::string& filePath) {
 }
 
 std::string utils::getParentDirectory(const std::string filePathString) {
-    return std::filesystem::path(filePathString).parent_path().string();
+    return std::filesystem::path(
+		std::filesystem::absolute(filePathString)
+	).parent_path().string();
 }
 
 bool utils::pathExists(const std::string& path) {

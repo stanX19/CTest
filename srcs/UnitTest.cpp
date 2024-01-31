@@ -11,14 +11,14 @@ void UnitTest::configure(std::string directory, int timeout, bool displayLineBre
 	displayLineBreak_ = displayLineBreak;
 }
 
-// .c type file will be compiled together
+// will be compiled together
 void UnitTest::addRequiredFile(const std::string &filename) {
 	requiredFilePaths_.push_back(directory_ + "/" + filename);
 }
 
-// won't be compiled together
-void UnitTest::addTemporaryFile(const std::string &content) {
-	TemporaryFile tempFile(content);
+// extension shouldnt include '.' default is ""
+void UnitTest::addTemporaryFile(const std::string &content, std::string extension) {
+	TemporaryFile tempFile(content, extension);
 	allTemporaryFiles_.push_back(tempFile);
 }
 
@@ -46,8 +46,17 @@ void UnitTest::addTemporaryMainFile(const std::string &templates, std::string co
 }
 
 // will be compiled together
-void UnitTest::addTemporaryCodeFile(const std::string &content) {
+void UnitTest::addTemporaryCodeFile(const std::string &content, std::string name) {
 	allTempCodeFiles_.push_back({UnitTestconfig::headers + content, ".c"});
+	if (!name.empty())
+		allTempCodeFiles_.back().setFilename(name);
+}
+
+// will be compiled together
+void UnitTest::addTemporaryHeaderFile(const std::string &content, std::string name) {
+	allTempCodeFiles_.push_back({UnitTestconfig::headers + content, ".h"});
+	if (!name.empty())
+		allTempCodeFiles_.back().setFilename(name);
 }
 
 void UnitTest::addTestCase(const std::string &argv, const std::string &expectedOutput) {
