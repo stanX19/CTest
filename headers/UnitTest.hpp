@@ -20,6 +20,7 @@ namespace UnitTestconfig {
 	inline bool showDetails = 0;
 	inline bool showAll = 0;
 	inline bool showListCase = 0;
+	inline bool silenceNorm = 0;
 	inline bool formatUnprintable = 0;
 	inline int lineLength = 100;
 	inline std::string targetDir = ".";

@@ -108,17 +108,26 @@ bool UnitTest::norminette(const std::string &path) {
 	std::string norm = "python3 -m norminette";
 	std::string flags;
 	std::string extension = utils::getFileExtension(path);
+
 	if (extension != "h" && extension != "c")
 		return 0;
 	if (extension == "h")
 		flags += "-R CheckDefine";
-	std::string command = "(" + norm + " " + flags + " " + path +
-		" | grep Error:) > " + errorFile_.filename();
+
+	std::system((norm + " > /dev/null 2> " + errorFile_.filename()).c_str());
+	if (!errorFile_.readContent().empty())
+		norm = "norminette";
+
+	std::string command = "{ " + norm + " " + flags + " " + path +
+		" | grep Error: ; } > " + errorFile_.filename();
+
 	std::system(command.c_str());
 	return !errorFile_.readContent().empty();
 }
 
 void UnitTest::validateNorme() {
+	if (UnitTestconfig::silenceNorm)
+		return ;
 	std::string message;
 	for (auto &path: requiredFilePaths_) {
 		if (norminette(path))
@@ -152,7 +161,6 @@ void UnitTest::compile() {
 	std::string IFLAGS;
 	std::set<std::string> headers;
 
-	// processing
 	for (const std::string &filePath : all_file_path) {
 		std::string extension = utils::getFileExtension(filePath);
 		if (!utils::pathExists(filePath))
@@ -166,13 +174,14 @@ void UnitTest::compile() {
 	for (const std::string &dirPath : headers) {
 		IFLAGS += "-I" + dirPath + " ";
 	}
-	std::string redirect = " -o " + executableFile_.filename() + " 2> " + errorFile_.filename();
-	std::string compileCommand = CC_ + " " + CFLAGS_ + " " + SRCS + " " + IFLAGS + " " + redirect;
+	std::string redirect = " 2> " + errorFile_.filename();
+	std::string compileCommand = CC_ + " " + CFLAGS_ + " " + SRCS + " " + IFLAGS + " -o a.out " + redirect;
 	int compileResult = std::system(compileCommand.c_str());
 	if (compileResult != 0)
 	{
 		throw CompilationError(compileCommand + "\n" + errorFile_.readContent());
 	}
+	std::rename("a.out", executableFile_.filename().c_str());
 }
 
 bool UnitTest::runAllTestCase()

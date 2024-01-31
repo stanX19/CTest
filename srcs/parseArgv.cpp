@@ -1,6 +1,6 @@
 #include "UnitTest.hpp"
 
-static void processFlag(char c) {
+static void processLetterFlag(char c) {
     using namespace UnitTestconfig;
 
 	switch (c)
@@ -21,12 +21,21 @@ static void processFlag(char c) {
 	throw InvalidFlagError(std::string("-") + c);
 }
 
-static void processFlags(const std::string &flags) {
+static void processLetterFlags(const std::string &flags) {
 	for (const char &c : flags) {
 		if (c == '-')
 			continue;
-		processFlag(c);
+		processLetterFlag(c);
 	}
+}
+
+static void processStringFlags(const std::string &_flag) {
+	std::string flag = _flag.substr(2);
+	if (flag == "sn") {
+		UnitTestconfig::silenceNorm = 1;
+		return ;
+	}
+	throw InvalidFlagError(flag);
 }
 
 static void setTargetDir(const std::string &path) {
@@ -41,8 +50,12 @@ static void setTargetDir(const std::string &path) {
 static void processArgv(int argc, char** argv) {
 	for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
-        if (arg[0] == '-')
-			processFlags(arg);
+        // if (arg[0] == '-' && arg[1] == '-' && arg[2] == 0)
+		// 	return ;
+        if (arg[0] == '-' && arg[1] == '-')
+			processStringFlags(arg);
+        else if (arg[0] == '-')
+			processLetterFlags(arg);
 		else
 			setTargetDir(arg);
 	}
@@ -50,7 +63,7 @@ static void processArgv(int argc, char** argv) {
 }
 
 static void printUsage(char *name) {
-	std::cout << "Usage: " << name << " [target_directory] [-a] [-f] [-d]\n"
+	std::cout << "Usage: " << name << " [target_directory] [-a] [-f] [-d] [-l] [--sn]\n"
 			  << "\n"
 			  << "Runs test case on c language files\n"
 			  << "\n"
@@ -59,6 +72,8 @@ static void printUsage(char *name) {
 			  << "  -a : All - Display all test cases\n"
 			  << "  -f : Fail - Display only failed test results\n"
 			  << "  -d : Details - Display detailed test cases\n"
+			  << "\n"
+			  << "  --sn : Silence Norm - ignore norm errors\n"
 			  << "\n"
 			  << "Arguments:\n"
 			  << "  [target_directory] : Optional. Specify the directory to be tested. Default is '.' (current directory).\n"
