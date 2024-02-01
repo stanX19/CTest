@@ -28,8 +28,10 @@ void TemporaryFile::setContent(const std::string& content) {
 
 void TemporaryFile::setFilename(const std::string& name) {
 	//std::cout << "rename " << filename_ << " " << name << "\n";
-	if (std::rename(filename_.c_str(), name.c_str()) != 0)
-	{
+	if (utils::pathExists(name)) {
+		++(*ref_count_);
+	}
+	if (std::rename(filename_.c_str(), name.c_str()) != 0) {
 		std::cerr << "Error renaming temporary file '" << filename_ << "' to '" << name << "'" << std::endl;
 	}
 	filename_ = name;
